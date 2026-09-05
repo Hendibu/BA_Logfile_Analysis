@@ -4,8 +4,8 @@ import numpy as np
 from datetime import datetime, timezone
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-IN_SESSIONS = "dis22_sessions.tsv"
-OUT         = "dis22_sessions_extended.tsv"
+IN_SESSIONS = "../../data/dis22_sessions.tsv"
+OUT         = "../../data/dis22_sessions_extended.tsv"
 TIME_FILE   = OUT + ".time"
 WINDOW_SEC  = 30 * 60
 MAX_SPAN    = 60 * 60

@@ -5,7 +5,7 @@
 import sys, re
 from datetime import datetime, timezone
 
-PATH = sys.argv[1] if len(sys.argv) > 1 else "log_files.tsv"
+PATH = sys.argv[1] if len(sys.argv) > 1 else "../../data/log_files.tsv"
 COL  = sys.argv[2] if len(sys.argv) > 2 else "date"
 
 def is_epoch(s):

@@ -4,8 +4,8 @@ import os
 os.environ["POLARS_MAX_THREADS"] = "4"
 import polars as pl
 
-SRC = "dis22_sorted_noburst.tsv"
-OUT = "dis22_uidday.tsv"
+SRC = "../../data/dis22_sorted_noburst.tsv"
+OUT = "../../data/dis22_uidday.tsv"
 
 df = (
     pl.scan_csv(SRC, separator="\t", infer_schema_length=0)            # alles als String lesen

@@ -3,7 +3,7 @@
 # der interessante Kontrast zu DIS22/Kaskade. Laufzeit wird gemessen.
 import csv, time
 #SORTED, OUT = "dis22_sorted.tsv", "uuid_sessions.tsv"
-SORTED, OUT = "dis22_sorted_noburst.tsv", "uuid_sessions.tsv"
+SORTED, OUT = "../../data/dis22_sorted_noburst.tsv", "../../data/uuid_sessions.tsv"
 TIME_FILE   = OUT + ".time"
 MAX_ROWS    = None
 csv.field_size_limit(2**31 - 1)

@@ -21,10 +21,10 @@ import csv, json, re
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
-CASCADE = "cascade_full_1234.tsv"
-DIS22   = "dis22_sessions_extended.tsv"
-CHOSEN  = "chosen.txt"
-OUT     = "annotation_cases.json"
+CASCADE = "../../data/cascade_full_1234.tsv"
+DIS22   = "../../data/dis22_sessions_extended.tsv"
+CHOSEN  = "../../data/chosen.txt"
+OUT     = "../../data/annotation_cases.json"
 UUID_WARN = 60            # nur Warnung, falls die UUID-Session sehr gross ist
 csv.field_size_limit(2**31 - 1)
 

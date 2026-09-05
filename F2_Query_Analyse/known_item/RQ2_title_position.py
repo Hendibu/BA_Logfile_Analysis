@@ -7,8 +7,8 @@ import csv, sys, re
 from collections import Counter
 csv.field_size_limit(2**31 - 1)
 
-SRC   = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
-TITLE = "doc_titles.tsv"
+SRC   = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
+TITLE = "../../data/doc_titles.tsv"
 
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00","")

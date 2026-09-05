@@ -11,8 +11,8 @@
 import csv, sys
 csv.field_size_limit(2**31 - 1)
 
-RAW   = "log_files.tsv"
-INTER = "interactions.tsv"
+RAW   = "../../../data/log_files.tsv"
+INTER = "../../../data/interactions.tsv"
 
 def strip_nul(fo):
     for line in fo:

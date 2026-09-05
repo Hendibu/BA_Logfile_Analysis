@@ -19,8 +19,8 @@ from collections import Counter
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 
-WRONG = sys.argv[1] if len(sys.argv) > 1 else "(WRONG)cascade_full_1234.tsv"
-RIGHT = sys.argv[2] if len(sys.argv) > 2 else "cascade_full_1234.tsv"
+WRONG = sys.argv[1] if len(sys.argv) > 1 else "../../data/(WRONG)cascade_full_1234.tsv"
+RIGHT = sys.argv[2] if len(sys.argv) > 2 else "../../data/cascade_full_1234.tsv"
 LONG_MIN = 4          # ab wie vielen Queries eine alte Session als "lang" gilt
 
 def strip_nul(fo):

@@ -6,8 +6,8 @@ from collections import Counter
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 
-SRC  = "log_files.tsv"
-OUT  = "interactions.tsv"
+SRC  = "../../data/log_files.tsv"
+OUT  = "../../data/interactions.tsv"
 KEEP = {"get-pdf", "data-provider", "author", "works"}
 
 def strip_nul(fo):

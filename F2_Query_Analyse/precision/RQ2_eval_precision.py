@@ -3,7 +3,7 @@
 # sowie die haeufigsten Fehlklassifikationen. Ausgabe = reine Aggregate (NDA-sicher).
 import csv, sys
 from collections import Counter
-IN = sys.argv[1] if len(sys.argv) > 1 else "precision_stichprobe.tsv"
+IN = sys.argv[1] if len(sys.argv) > 1 else "../../data/precision_stichprobe.tsv"
 
 per = Counter(); ok = Counter(); conf = Counter(); nicht = 0
 with open(IN, newline="", encoding="utf-8") as f:

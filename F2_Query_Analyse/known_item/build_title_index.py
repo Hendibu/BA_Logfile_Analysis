@@ -7,7 +7,7 @@
 import json, sys, os, glob
 
 FOLDER = sys.argv[1] if len(sys.argv) > 1 else "."
-OUT = "doc_titles.tsv"
+OUT = "../../data/doc_titles.tsv"
 TITLE_CANDS = ["title","dc_title","dctitle","document_title","documenttitle",
                "name","heading","titles"]
 ID_CANDS    = ["id","docid","doc_id","documentid","document_id","coreid",

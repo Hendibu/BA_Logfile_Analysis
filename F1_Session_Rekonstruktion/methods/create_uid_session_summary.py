@@ -1,7 +1,7 @@
 import polars as pl
 
-SRC = "log_files_cleaned.tsv"
-OUT = "uuid_sessions_summary.tsv"
+SRC = "../../data/log_files_cleaned.tsv"
+OUT = "../../data/uuid_sessions_summary.tsv"
 
 lf = pl.scan_csv(SRC, separator="\t")
 

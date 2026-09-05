@@ -9,7 +9,7 @@
 import csv, sys, os
 csv.field_size_limit(2**31 - 1)
 
-INTER = "interactions.tsv"
+INTER = "../../../data/interactions.tsv"
 files = sys.argv[1:]
 if not files:
     sys.exit("Bitte die zu pruefenden Dateien in Pipeline-Reihenfolge uebergeben.")

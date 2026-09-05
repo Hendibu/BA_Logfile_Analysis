@@ -11,11 +11,13 @@
 import csv, sys, re
 from collections import Counter, defaultdict
 csv.field_size_limit(2**31 - 1)
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "reformulation"))
 from RQ2_reformulation import classify
 
-SRC   = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
-TITLE = "doc_titles.tsv"
-OUTEX = "known_item_beispiele.txt"
+SRC   = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
+TITLE = "../../data/doc_titles.tsv"
+OUTEX = "../../data/known_item_beispiele.txt"
 SHORT_MAX = 3      # kurze Mehr-Query-Episode: 2..SHORT_MAX Queries
 LONG_MIN  = 4      # explorativ ab so vielen Queries (OHNE Verfeinerungspflicht)
 REFINE = {"Add Words","Remove Words","Word Substitution","Substring","Superstring"}

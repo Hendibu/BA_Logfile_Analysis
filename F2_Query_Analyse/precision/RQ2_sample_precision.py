@@ -4,12 +4,14 @@
 # ACHTUNG: enthaelt echte Queries -> Ausgabedatei BLEIBT LOKAL (NDA).
 import csv, sys, re, random
 from collections import defaultdict, Counter
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "reformulation"))
 from RQ2_reformulation import classify
 csv.field_size_limit(2**31 - 1)
 
-SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
+SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
 K   = int(sys.argv[2]) if len(sys.argv) > 2 else 25          # Stichprobengroesse je Strategie
-OUT = "precision_stichprobe.tsv"
+OUT = "../../data/precision_stichprobe.tsv"
 # gleicher Struktur-Filter wie in 6.3/6.4, damit dieselbe Basis geprueft wird
 STRUCT = re.compile(r'year\s*:|yearpublished|(<=|>=|<|>)\s*\d|\bAND\s*\(|\bOR\s*\(', re.IGNORECASE)
 rng = random.Random(42)                                       # feste Seed = reproduzierbar

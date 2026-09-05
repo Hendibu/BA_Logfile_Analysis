@@ -11,8 +11,8 @@ try:
 except Exception as e:
     sys.exit(f"reformulation.py muss im selben Ordner liegen. Fehler: {e}")
 
-SRC = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
-OUT = "RQ2_reformulation_beispiele.txt"
+SRC = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
+OUT = "../../data/RQ2_reformulation_beispiele.txt"
 PER = 2
 # strukturierte / automatisierte Query-Muster, die uebersprungen werden:
 STRUCT = re.compile(r'year\s*:|yearpublished|(<=|>=|<|>)\s*\d|\bAND\s*\(|\bOR\s*\(', re.IGNORECASE)

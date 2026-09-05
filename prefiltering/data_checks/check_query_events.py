@@ -3,7 +3,7 @@
 # Pflichtfelder (date/search_id leer) haben. Erklaert die 90.043.872 -> 89.922.834
 # Differenz. NUR Aggregate.
 import sys
-PATH = sys.argv[1] if len(sys.argv) > 1 else "log_files.tsv"
+PATH = sys.argv[1] if len(sys.argv) > 1 else "../../data/log_files.tsv"
 
 with open(PATH, encoding="utf-8", errors="replace") as f:
     h = f.readline().replace("\x00", "").rstrip("\n").split("\t")

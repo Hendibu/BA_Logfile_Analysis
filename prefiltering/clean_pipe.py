@@ -1,7 +1,7 @@
 import polars as pl
 
-SRC = "log_files.parquet"
-OUT = "data_filtered.ndjson"
+SRC = "../data/log_files.parquet"
+OUT = "../data/data_filtered.ndjson"
 
 FREQ_DROP, FREQ_CAP = 100, 50
 SPECIAL_FIELDS = [

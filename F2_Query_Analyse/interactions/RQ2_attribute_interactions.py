@@ -2,11 +2,13 @@
 # RQ2 (4.6): fuer EINE Session-Datei zwei Tabellen (plausibel gelesen / zu kurz).
 import csv, sys, re                          # re NEU: fuer den Struktur-Filter
 from collections import Counter, defaultdict
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "reformulation"))
 from RQ2_reformulation import classify
 csv.field_size_limit(2**31 - 1)
 
-SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
-DWELL = "RQ2_interactions_dwell.tsv"
+SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
+DWELL = "../../data/RQ2_interactions_dwell.tsv"
 
 # get-pdf entfernt: Downloads haben keine uid -> strukturell 0,00 %, siehe Befund.
 TYPES = ["author", "works", "data-provider"]

@@ -7,10 +7,10 @@ from collections import defaultdict
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 
-RAW           = "log_files.tsv"
-INTERACTIONS  = "interactions.tsv"
-OUT           = "RQ2_interactions_dwell.tsv"
-SESSION_FILE  = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
+RAW           = "../../data/log_files.tsv"
+INTERACTIONS  = "../../data/interactions.tsv"
+OUT           = "../../data/RQ2_interactions_dwell.tsv"
+SESSION_FILE  = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
 THRESHOLD     = 30    # Sekunden: darunter = "zu kurz". ~120 Woerter bei 238 WpM.
 
 def strip_nul(fo):

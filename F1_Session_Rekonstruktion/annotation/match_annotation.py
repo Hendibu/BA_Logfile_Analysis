@@ -10,10 +10,10 @@ from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 random.seed(42)
 
-A_LABEL, A_PATH = "Kaskade", (sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv")
-B_LABEL, B_PATH = "DIS22",   (sys.argv[2] if len(sys.argv) > 2 else "dis22_sessions_nostruct.tsv")
+A_LABEL, A_PATH = "Kaskade", (sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv")
+B_LABEL, B_PATH = "DIS22",   (sys.argv[2] if len(sys.argv) > 2 else "../../data/dis22_sessions_nostruct.tsv")
 K = 20; MIN_Q = 3
-OUT = "annotation_vergleich.txt"
+OUT = "../../data/annotation_vergleich.txt"
 
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")

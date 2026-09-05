@@ -4,10 +4,10 @@ csv.field_size_limit(2**31 - 1)
 
 # (Anzeigename, Datei, Session-Spalte, [Zeit-Dateien zum Aufsummieren])
 METHODS = [
-    ("Kaskade",       "cascade_full_1234.tsv",       "session_id",     ["cascade_full_1234.tsv.time"]),
-    ("DIS22 Bildung", "dis22_sessions.tsv",          "session_id",     ["dis22_sessions.tsv.time"]),
-    ("DIS22 +Ext",    "dis22_sessions_extended.tsv", "ext_session_id", ["dis22_sessions.tsv.time","dis22_sessions_extended.tsv.time"]),
-    ("UUID_days",          "uuid_day_sessions.tsv",           "session_id",     ["uuid_day_sessions.tsv.time"]),
+    ("Kaskade",       "../../data/cascade_full_1234.tsv",       "session_id",     ["../../data/cascade_full_1234.tsv.time"]),
+    ("DIS22 Bildung", "../../data/dis22_sessions.tsv",          "session_id",     ["../../data/dis22_sessions.tsv.time"]),
+    ("DIS22 +Ext",    "../../data/dis22_sessions_extended.tsv", "ext_session_id", ["../../data/dis22_sessions.tsv.time","../../data/dis22_sessions_extended.tsv.time"]),
+    ("UUID_days",          "../../data/uuid_day_sessions.tsv",           "session_id",     ["../../data/uuid_day_sessions.tsv.time"]),
 ]
 
 def analyze(path, sidcol, timefiles):

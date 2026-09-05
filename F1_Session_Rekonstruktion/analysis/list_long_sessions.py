@@ -11,8 +11,8 @@ MIN_Q = 3
 LIMIT = 400          # max. so viele Sessions je Datei (Zufallsstichprobe; hoeher = mehr)
 
 SOURCES = [
-    ("Kaskade", "cascade_full_1234_nobots.tsv",       "session_id",     "cascade_long.txt"),
-    ("DIS22",   "dis22_sessions_nobots.tsv", "session_id", "dis22_long.txt"),
+    ("Kaskade", "../../data/cascade_full_1234_nobots.tsv",       "session_id",     "../../data/cascade_long.txt"),
+    ("DIS22",   "../../data/dis22_sessions_nobots.tsv", "session_id", "../../data/dis22_long.txt"),
 ]
 
 def fmt_ts(s):

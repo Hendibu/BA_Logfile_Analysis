@@ -4,7 +4,7 @@
 import sys, csv
 from collections import Counter
 
-INFILE = sys.argv[1] if len(sys.argv) > 1 else "interactions.tsv"
+INFILE = sys.argv[1] if len(sys.argv) > 1 else "../../../data/interactions.tsv"
 
 with open(INFILE, newline="", encoding="utf-8", errors="replace") as f:
     head = f.readline().rstrip("\r\n").split("\t")

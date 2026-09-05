@@ -7,7 +7,7 @@
 import csv, sys, re
 csv.field_size_limit(2**31 - 1)
 
-SRC = sys.argv[1] if len(sys.argv) > 1 else "dis22_sessions.tsv"
+SRC = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 MAX_SPAN_SEC = 120     # (A) Bot-Sweep, wenn alle Queries strukturiert UND Spanne <= das
 PAT = re.compile(r'yearPublished|(<=|>=|<|>)\s*\d|\bAND\s*\(|\bOR\s*\(', re.IGNORECASE)
 

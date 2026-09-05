@@ -17,8 +17,8 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # ---- Einstellungen (rekonstruierte Defaults, alle tunebar) -----------------
-SORTED     = "dis22_sorted.tsv"    # global zeitsortiert (ts, query, serp, search_id) - aus dem DIS22-Sort
-OUT        = "cascade_sessions.tsv"
+SORTED     = "../data/dis22_sorted.tsv"    # global zeitsortiert (ts, query, serp, search_id) - aus dem DIS22-Sort
+OUT        = "../data/cascade_sessions.tsv"
 WINDOW_SEC = 90 * 60      # Stufe 2: 90-Minuten-Fenster (harte Obergrenze)
 TOKEN_TH   = 0.50         # Stufe 1: Schwelle fuer Token-Overlap (Jaccard)
 SIM_TH     = 0.30         # Stufe 2: Schwelle fuer Zeichen-n-Gramm-Cosinus

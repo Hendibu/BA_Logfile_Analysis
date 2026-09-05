@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 random.seed(42)
 csv.field_size_limit(2**31 - 1)
 
-SORTED   = "dis22_window.tsv"
-OUT      = "uid_days.txt"
+SORTED   = "../../data/dis22_window.tsv"
+OUT      = "../../data/uid_days.txt"
 MIN_DAYS = 2       # uid muss ueber >= so viele Tage aktiv sein (sonst kein Split)
 LIMIT    = 100     # max. so viele uids in die Datei (Zufallsstichprobe)
 

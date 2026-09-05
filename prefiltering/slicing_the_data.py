@@ -6,15 +6,15 @@ def ts(dt_str):
                .timestamp())
 
 RANGES = {
-    "data_2025_03_05.log": (ts("01.03.2025 00:00:00"), ts("01.06.2025 00:00:00")),
-    "data_2025_06_08.log": (ts("01.06.2025 00:00:00"), ts("01.09.2025 00:00:00")),
-    "data_2025_09_11.log": (ts("01.09.2025 00:00:00"), ts("01.12.2025 00:00:00")),
+    "../data/data_2025_03_05.log": (ts("01.03.2025 00:00:00"), ts("01.06.2025 00:00:00")),
+    "../data/data_2025_06_08.log": (ts("01.06.2025 00:00:00"), ts("01.09.2025 00:00:00")),
+    "../data/data_2025_09_11.log": (ts("01.09.2025 00:00:00"), ts("01.12.2025 00:00:00")),
 }
 
 
 import json
 
-INPUT_FILE = "/data/search_log.log"
+INPUT_FILE = "../data/search_log.log"
 
 files = {name: open(name, "w", encoding="utf-8") for name in RANGES}
 

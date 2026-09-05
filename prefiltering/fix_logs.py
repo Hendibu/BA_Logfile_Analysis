@@ -8,9 +8,9 @@ files = [
     "../Datasets/search_logs_fe03_051235/search_log_3.log",
 ]
 
-output_file = "log_files.tsv"
-bad_lines_file = "bad_lines.log"
-fields_cache = "fieldnames.json"
+output_file = "../data/log_files.tsv"
+bad_lines_file = "../data/bad_lines.log"
+fields_cache = "../data/fieldnames.json"
 
 PROGRESS_EVERY = 1_000_000   # alle 1 Mio. Zeilen eine Statusmeldung
 

@@ -5,7 +5,7 @@
 # abgleichen. NUR Aggregate.
 import csv, sys
 csv.field_size_limit(2**31 - 1)
-PATH = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nobots.tsv"
+PATH = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nobots.tsv"
 
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")

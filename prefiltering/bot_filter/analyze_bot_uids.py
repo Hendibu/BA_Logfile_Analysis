@@ -7,11 +7,11 @@ import csv, sys, statistics
 from collections import defaultdict, Counter
 csv.field_size_limit(2**31 - 1)
 
-SRC          = sys.argv[1] if len(sys.argv) > 1 else "dis22_sessions.tsv"
+SRC          = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 MIN_Q        = 3      # >=3 Queries -> mind. 2 Luecken, um Gleichmaessigkeit zu beurteilen
 REG_STD      = 2.0    # Standardabw. der Zeitluecken <= das  -> "gleichmaessig getaktet"
 MAX_MEAN_GAP = 12     # mittlere Luecke <= das (s) -> schneller als ~13 s SERP-Sichtung
-DETAIL_OUT   = "bot_sessions_detail.tsv"   # je geflaggter Session: uid, n, mean_gap, std_gap
+DETAIL_OUT   = "../../data/bot_sessions_detail.tsv"   # je geflaggter Session: uid, n, mean_gap, std_gap
 
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")

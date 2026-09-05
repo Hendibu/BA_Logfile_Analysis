@@ -13,8 +13,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 os.environ["JAVA_HOME"] = r"C:\Users\hebus\AppData\Local\Programs\Eclipse Adoptium\jdk-21.0.11.10-hotspot"
 import pyterrier as pt
 
-SORTED    = "dis22_uidday.tsv"                 # <-- Eingabe jetzt uid|Tag-sortiert
-OUT       = "cascade_full_1234.tsv"
+SORTED    = "../../data/dis22_uidday.tsv"                 # <-- Eingabe jetzt uid|Tag-sortiert
+OUT       = "../../data/cascade_full_1234.tsv"
 TIME_FILE = OUT + ".time"
 INDEX_DIR = r"C:\Bachelorarbeit\Wikipedia\wiki_index"
 MAX_ROWS  = None

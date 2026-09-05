@@ -8,7 +8,7 @@
 # ============================================================================
 import csv, numpy as np
 
-INP = "cascade_full_1234.tsv"; REPORT = "cascade_eval.txt"
+INP = "../../data/cascade_full_1234.tsv"; REPORT = "../../data/cascade_eval.txt"
 csv.field_size_limit(2**31 - 1)
 
 cnt = {"start":0,"gap":0,"s1":0,"s2":0,"s3":0,"s4":0,"boundary":0}

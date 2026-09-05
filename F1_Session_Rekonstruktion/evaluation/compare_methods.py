@@ -11,9 +11,9 @@ from collections import Counter
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 
-UIDDAY = sys.argv[1] if len(sys.argv) > 1 else "dis22_uidday.tsv"
-CASC   = sys.argv[2] if len(sys.argv) > 2 else "cascade_full_1234.tsv"
-DIS    = sys.argv[3] if len(sys.argv) > 3 else "dis22_sessions.tsv"
+UIDDAY = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_uidday.tsv"
+CASC   = sys.argv[2] if len(sys.argv) > 2 else "../../data/cascade_full_1234.tsv"
+DIS    = sys.argv[3] if len(sys.argv) > 3 else "../../data/dis22_sessions.tsv"
 
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00","")

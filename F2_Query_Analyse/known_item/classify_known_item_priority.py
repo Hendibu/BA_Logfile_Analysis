@@ -8,8 +8,8 @@
 import csv, sys, re
 csv.field_size_limit(2**31 - 1)
 
-SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
-TITLE_INDEX  = "doc_titles.tsv"
+SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
+TITLE_INDEX  = "../../data/doc_titles.tsv"
 MIN_EXPL     = 4
 
 def strip_nul(fo):

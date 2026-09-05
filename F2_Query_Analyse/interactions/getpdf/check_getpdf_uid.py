@@ -8,8 +8,8 @@
 import csv, sys
 csv.field_size_limit(2**31 - 1)
 
-INTER = "interactions.tsv"
-SRC   = sys.argv[1] if len(sys.argv) > 1 else "dis22_sorted_noburst.tsv"
+INTER = "../../../data/interactions.tsv"
+SRC   = sys.argv[1] if len(sys.argv) > 1 else "../../../data/dis22_sorted_noburst.tsv"
 
 def strip_nul(fo):
     for line in fo:

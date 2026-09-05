@@ -51,8 +51,8 @@ def drop_high_frequency_queries(df, limit):     # Anti-Join = leichter
 def limit_high_frequency_queries(df, limit):    # No-Op (Pass-through)
     return df
 
-SRC = "log_files.tsv"
-OUT = "log_files_cleaned.tsv"
+SRC = "../data/log_files.tsv"
+OUT = "../data/log_files_cleaned.tsv"
 COLS = ["date","search_id","serp","query","trackId","type","uid"]
 
 lf = pl.scan_csv(SRC, separator="\t", quote_char=None, infer_schema_length=0)

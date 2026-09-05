@@ -3,7 +3,7 @@
 # Nutzt, dass Zeilen derselben Session zusammenhaengend stehen. NUR Aggregate.
 import csv, sys
 csv.field_size_limit(2**31 - 1)
-PATH = sys.argv[1] if len(sys.argv) > 1 else "dis22_sessions.tsv"
+PATH = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")

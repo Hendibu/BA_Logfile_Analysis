@@ -6,8 +6,8 @@ import csv, sys
 from collections import Counter
 csv.field_size_limit(2**31 - 1)
 
-SESSION = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
-INTER   = "interactions.tsv"
+SESSION = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
+INTER   = "../../data/interactions.tsv"
 
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")

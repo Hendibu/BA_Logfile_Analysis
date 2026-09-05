@@ -2,7 +2,7 @@
 # Session = (uid, Tag).  Sonst identisches Format wie uuid_sessions.tsv.
 import csv, time
 from datetime import datetime, timezone
-SORTED, OUT = "dis22_sorted_noburst.tsv", "uuid_day_sessions.tsv"
+SORTED, OUT = "../../data/dis22_sorted_noburst.tsv", "../../data/uuid_day_sessions.tsv"
 TIME_FILE   = OUT + ".time"
 MAX_ROWS    = None
 csv.field_size_limit(2**31 - 1)

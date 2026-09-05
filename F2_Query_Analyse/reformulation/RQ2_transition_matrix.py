@@ -8,7 +8,7 @@ from collections import Counter
 from RQ2_reformulation import classify
 csv.field_size_limit(2**31 - 1)
 
-SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234_nostruct.tsv"
+SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
 STRUCT = re.compile(r'year\s*:|yearpublished|(<=|>=|<|>)\s*\d|\bAND\s*\(|\bOR\s*\(', re.IGNORECASE)
 ORDER = ["Identical","Word Reorder","Whitespace/Punctuation","Remove Words","Add Words",
          "URL Stripping","Stemming","Form Acronym","Expand Acronym","Substring","Superstring",

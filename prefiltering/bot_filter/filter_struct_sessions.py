@@ -8,7 +8,7 @@ import csv, sys, re
 from collections import defaultdict
 csv.field_size_limit(2**31 - 1)
 
-SRC = sys.argv[1] if len(sys.argv) > 1 else "dis22_sessions.tsv"
+SRC = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 MIN_STRUCT_FRAC = 0.6     # (A) Session raus, wenn Anteil strukturierter Queries > diesem Wert
 PAT = re.compile(r'yearPublished|(<=|>=|<|>)\s*\d|\bAND\s*\(|\bOR\s*\(', re.IGNORECASE)
 

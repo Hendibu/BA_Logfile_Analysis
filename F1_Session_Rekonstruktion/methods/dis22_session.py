@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime, timezone
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-SORTED, OUT = "dis22_uidday.tsv", "dis22_sessions.tsv"
+SORTED, OUT = "../../data/dis22_uidday.tsv", "../../data/dis22_sessions.tsv"
 TIME_FILE   = OUT + ".time"
 MAX_ROWS    = None
 TD_SEC, SERP_TH, COS_TH = 5*60, 0.01, 0.10

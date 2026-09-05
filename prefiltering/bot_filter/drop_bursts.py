@@ -6,8 +6,8 @@ import csv
 from collections import defaultdict
 csv.field_size_limit(2**31 - 1)
 
-INPUT     = "dis22_sorted.tsv"          # volle, nach ts sortierte Daten
-OUTPUT    = "dis22_sorted_noburst.tsv"
+INPUT     = "../../data/dis22_sorted.tsv"          # volle, nach ts sortierte Daten
+OUTPUT    = "../../data/dis22_sorted_noburst.tsv"
 BURST_MIN = 2      # ab so vielen Queries derselben uid in EINER Sekunde -> entfernen
 
 def strip_nul(fo):

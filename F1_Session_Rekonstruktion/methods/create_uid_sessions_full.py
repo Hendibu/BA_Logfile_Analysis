@@ -2,10 +2,10 @@ import polars as pl
 import csv
 from datetime import datetime, timezone
 
-CLEAN             = "log_files_cleaned.tsv"
-SORTED            = "cleaned_sorted.tsv"
+CLEAN             = "../../data/log_files_cleaned.tsv"
+SORTED            = "../../data/cleaned_sorted.tsv"
 SESSIONS_PER_FILE = 5000
-OUT_PREFIX        = "uuid_sessions_part_"
+OUT_PREFIX        = "../../data/uuid_sessions_part_"
 
 # --- Phase 1: nach uid/Zeit sortieren (streamend auf die Platte) ---
 print("Phase 1: sortiere nach uid/Zeit ...", flush=True)

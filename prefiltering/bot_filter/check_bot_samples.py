@@ -6,10 +6,10 @@ from collections import defaultdict
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 
-SRC = sys.argv[1] if len(sys.argv) > 1 else "dis22_sessions.tsv"
+SRC = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 K = 15
 MIN_TIMING_Q, MAX_MEAN_GAP, REG_STD = 3, 12, 2.0
-OUT = "bot_check_samples.txt"
+OUT = "../../data/bot_check_samples.txt"
 rnd = random.Random(42)
 
 def strip_nul(fo):

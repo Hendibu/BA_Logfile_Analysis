@@ -21,9 +21,9 @@ from functions.clean_data import (
     drop_special_field_queries
 )
 
-INPUT_FILE = 'data_2025_03_05.log' 
+INPUT_FILE = '../data/data_2025_03_05.log'
 
-FINAL_LOG_FILE = 'data_2025_03_05_filtered_2.log'
+FINAL_LOG_FILE = '../data/data_2025_03_05_filtered_2.log'
 
 def safe_serp_parse(serp_raw):
     """Versucht, die SERP-String in eine Liste von IDs zu parsen."""

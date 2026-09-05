@@ -19,8 +19,8 @@ import csv, sys
 from collections import Counter, defaultdict
 csv.field_size_limit(2**31 - 1)
 
-CASC = sys.argv[1] if len(sys.argv) > 1 else "cascade_full_1234.tsv"
-DIS  = sys.argv[2] if len(sys.argv) > 2 else "dis22_sessions.tsv"
+CASC = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234.tsv"
+DIS  = sys.argv[2] if len(sys.argv) > 2 else "../../data/dis22_sessions.tsv"
 MERGE_STAGES = {"s1", "s2", "s3", "s4"}
 
 def strip_nul(fo):
