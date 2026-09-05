@@ -1,0 +1,54 @@
+# Datenschutz/NDA: Rohdaten, rekonstruierte Logs und Suchindizes duerfen NICHT ins Repo.
+# Diese Datei MUSS vor dem ersten "git add" existieren.
+
+# Ganze Datenordner
+Datasets/
+Wikipedia/
+Notebooks/
+data/
+results/
+
+# Notebooks (koennen Zell-Outputs mit echten Daten enthalten) - komplett raus
+*.ipynb
+.ipynb_checkpoints/
+
+# Rekonstruierte / abgeleitete Tabellen und Zeit-Logs
+*.tsv
+*.time
+
+# Annotations- und Stichproben-Dateien
+annotation_*
+annotation_*.txt
+*_stichprobe*
+*_stichprobe*.xlsx
+*_stichprobe*.tsv
+
+# Fehlerhafte/veraltete Zwischenstaende
+*WRONG*
+
+# Wikipedia-Dumps und Suchindizes
+*.bz2
+*.xml
+*.jsonl
+*_index/
+toy_index/
+wiki_index/
+wiki_index_full/
+
+# Freitext-Logs und Beispieldateien mit echten Suchanfragen
+*.log
+*.txt
+!requirements.txt
+
+# Sonstige generierte/temporaere Daten
+fieldnames.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor/OS
+.vscode/
+.DS_Store
