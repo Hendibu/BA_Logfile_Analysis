@@ -1,4 +1,8 @@
 pandas
+polars
+numpy
 scikit-learn
 nltk
 python-terrier
+mwxml
+mwparserfromhell
