@@ -1,19 +1,19 @@
 # trace_getpdf_stage.py  <datei1> <datei2> ...
-# --------------------------------------------------------------------------
-# Verfolgt die get-pdf-Such-Nummern (search_id) durch die Pipeline-Stufen.
-# Fuer jede uebergebene Datei wird gezaehlt, wie viele der ~94k get-pdf-
-# search_ids darin noch als search_id vorkommen. So sieht man, an WELCHER
-# Stufe die Download-Suchen verschwinden.
-# Nur Aggregate -> NDA-sicher. Bleibt lokal.
-# --------------------------------------------------------------------------
+# Verfolgt die get-pdf-Such-Nummern (search_id) durch die Pipeline-Stufen: fuer jede
+# uebergebene Datei wird gezaehlt, wie viele der get-pdf-search_ids darin noch vorkommen.
+# So sieht man, an welcher Stufe die Download-Suchen verschwinden.
+# Eingabe: interactions.tsv + beliebige Pipeline-Dateien als Argumente
+
 import csv, sys, os
 csv.field_size_limit(2**31 - 1)
 
+# Interaktionsdatei und die zu pruefenden Dateien (in Pipeline-Reihenfolge als Argumente)
 INTER = "../../../data/interactions.tsv"
 files = sys.argv[1:]
 if not files:
     sys.exit("Bitte die zu pruefenden Dateien in Pipeline-Reihenfolge uebergeben.")
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo:
         yield line.replace("\x00", "")
@@ -34,16 +34,16 @@ total = len(keys)
 print(f"distinct get-pdf search_ids: {total:,}")
 print("")
 
-# 2) je Datei zaehlen, wie viele davon als search_id vorkommen
+# 2) je Datei zaehlen, wie viele der get-pdf-search_ids darin noch als search_id vorkommen
 def count_in(path):
     if not os.path.exists(path):
-        return None
+        return None                         # Datei fehlt
     found = set()
     with open(path, newline="", encoding="utf-8", errors="replace") as f:
         r = csv.reader(strip_nul(f), delimiter="\t")
         h = next(r, None)
         if not h or "search_id" not in h:
-            return -1
+            return -1                        # keine search_id-Spalte
         isid = h.index("search_id")
         for row in r:
             if isid >= len(row):
@@ -53,6 +53,7 @@ def count_in(path):
                 found.add(sid)
     return len(found)
 
+# Je Datei die Trefferzahl und den Anteil ausgeben (Sonderfaelle: FEHLT / keine Spalte)
 print(f"{'Datei':<40}{'gefunden':>12}{'Anteil':>10}")
 print("-" * 62)
 for p in files:

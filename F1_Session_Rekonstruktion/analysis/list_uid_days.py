@@ -1,17 +1,21 @@
 # list_uid_days.py -- zeigt uids, deren Aktivitaet sich beim Tages-Split in
 # MEHRERE Sessions (Tage) aufteilt. Ohne Mindest-Query-Filter: jeder Tag ist
-# eine Session. Lesbar, mit Leerzeilen getrennt (Vorschlag des Dozenten).
+# eine Session. Lesbar, mit Leerzeilen getrennt.
+# Eingabe: dis22_sorted.tsv | Ausgabe: uid_days.txt
+
 import csv, random
 from collections import defaultdict
 from datetime import datetime, timezone
 random.seed(42)
 csv.field_size_limit(2**31 - 1)
 
-SORTED   = "../../data/dis22_window.tsv"
+# Pfade und Parameter (Mindest-Tage fuer einen Split, max. uids in der Stichprobe)
+SORTED   = "../../data/dis22_sorted.tsv"
 OUT      = "../../data/uid_days.txt"
 MIN_DAYS = 2       # uid muss ueber >= so viele Tage aktiv sein (sonst kein Split)
 LIMIT    = 100     # max. so viele uids in die Datei (Zufallsstichprobe)
 
+# Hilfsfunktionen: NUL-Bytes entfernen, Zeitstempel zu Tag bzw. lesbarer Zeit
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
 def day(ts):
@@ -28,6 +32,7 @@ with open(SORTED, newline="", encoding="utf-8") as f:
         u = row[iu]
         if u: per_uid_days[u].add(day(row[its]))
 
+# uids mit genug Tagen auswaehlen und daraus eine Zufallsstichprobe ziehen
 interesting = [u for u, ds in per_uid_days.items() if len(ds) >= MIN_DAYS]
 random.shuffle(interesting)
 chosen = set(interesting[:LIMIT])
@@ -47,6 +52,7 @@ with open(SORTED, newline="", encoding="utf-8") as f:
 with open(OUT, "w", encoding="utf-8") as fo:
     fo.write(f"# UID-Tages-Ansicht: {len(interesting)} uids ueber >= {MIN_DAYS} Tage, "
              f"Stichprobe {len(chosen)}\n\n")
+    # Pro uid die Events nach Tag gruppieren und tageweise als Bloecke ausgeben
     for u in sorted(ev):
         events = sorted(ev[u], key=lambda x: x[0])
         by_day = defaultdict(list)

@@ -1,10 +1,15 @@
 # eval_precision.py [stichprobe.tsv]
 # Liest die MANUELL ausgefuellte Stichprobe und rechnet die Precision je Strategie
-# sowie die haeufigsten Fehlklassifikationen. Ausgabe = reine Aggregate (NDA-sicher).
+# sowie die haeufigsten Fehlklassifikationen.
+# Eingabe: precision_stichprobe.tsv (default)
+
 import csv, sys
 from collections import Counter
+
+# Eingabedatei (Argument oder Standard)
 IN = sys.argv[1] if len(sys.argv) > 1 else "../../data/precision_stichprobe.tsv"
 
+# Stichprobe durchgehen: je Strategie geprueft/korrekt zaehlen und Fehler (zugewiesen->tatsaechlich) sammeln
 per = Counter(); ok = Counter(); conf = Counter(); nicht = 0
 with open(IN, newline="", encoding="utf-8") as f:
     r = csv.reader(f, delimiter="\t"); next(r)
@@ -19,6 +24,7 @@ with open(IN, newline="", encoding="utf-8") as f:
             true = row[5].strip() if len(row) > 5 and row[5].strip() else "?"
             conf[(lbl, true)] += 1
 
+# Precision je Strategie und gesamt ausgeben
 tot = sum(per.values()); tok = sum(ok.values())
 print("=== Precision je Strategie (korrekt / geprueft) ===")
 for lbl in sorted(per):
@@ -27,6 +33,8 @@ if tot:
     print(f"  {'---':22}")
     print(f"  {'GESAMT':22} {tok:>3}/{tot:<3} = {100*tok/tot:5.1f}%")
 if nicht: print(f"\n(noch nicht annotiert: {nicht} Zeilen)")
+
+# Haeufigste Fehlklassifikationen ausgeben (zugewiesenes Label -> tatsaechliches Label)
 print("\n=== Haeufigste Fehlklassifikationen (zugewiesen -> tatsaechlich) ===")
 for (a, b), n in conf.most_common(15):
     print(f"  {a:20} -> {b:20} {n}")

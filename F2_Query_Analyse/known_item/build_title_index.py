@@ -3,9 +3,11 @@
 #   doc_titles.tsv  mit Spalten  doc_id <TAB> title(raw)
 # Erkennt Titel-/ID-Feld automatisch, verarbeitet JSON-Array, JSONL und
 # {"...":[...]}-Objekte, auch einfach verschachtelt (z.B. unter "metadata").
-# Oeffentliches Korpus -> Statistik/Beispiele teilbar.
+# Eingabe: Ordner mit .json/.jsonl (default: aktuelles Verzeichnis) | Ausgabe: doc_titles.tsv
+
 import json, sys, os, glob
 
+# Eingabeordner, Ausgabedatei und moegliche Feldnamen fuer Titel bzw. Dokument-ID
 FOLDER = sys.argv[1] if len(sys.argv) > 1 else "."
 OUT = "../../data/doc_titles.tsv"
 TITLE_CANDS = ["title","dc_title","dctitle","document_title","documenttitle",
@@ -13,8 +15,10 @@ TITLE_CANDS = ["title","dc_title","dctitle","document_title","documenttitle",
 ID_CANDS    = ["id","docid","doc_id","documentid","document_id","coreid",
                "core_id","_id","docno","cord_uid","uid"]
 
+# Feldnamen vereinheitlichen (klein, ohne Leer-/Bindestriche), damit Varianten matchen
 def norm_key(k): return k.lower().replace(" ", "").replace("-", "_")
 
+# Ersten passenden Feldwert aus einem Dict holen; sucht auch eine Ebene tiefer (verschachtelt)
 def pick(d, cands):
     keys = {norm_key(k): k for k in d}
     for c in cands:
@@ -26,11 +30,13 @@ def pick(d, cands):
                 if c in keys2: return v[keys2[c]]
     return None
 
+# Feldwert zu sauberem einzeiligen Text machen (Listen -> erstes Element, Tabs/Zeilenumbrueche raus)
 def as_text(v):
     if v is None: return ""
     if isinstance(v, list): v = v[0] if v else ""
     return str(v).replace("\t", " ").replace("\r", " ").replace("\n", " ").strip()
 
+# Datensaetze aus einer Datei liefern: erst als ganzes JSON (Array/Objekt), sonst zeilenweise (JSONL)
 def iter_records(path):
     try:
         with open(path, encoding="utf-8", errors="replace") as f:
@@ -39,7 +45,7 @@ def iter_records(path):
             yield from data; return
         if isinstance(data, dict):
             lk = next((k for k, v in data.items() if isinstance(v, list)), None)
-            if lk: yield from data[lk]; return
+            if lk: yield from data[lk]; return       # erstes Listen-Feld als Datensatzliste
             yield data; return
     except Exception:
         pass
@@ -50,11 +56,13 @@ def iter_records(path):
             try: yield json.loads(line)
             except Exception: continue
 
+# Alle JSON-/JSONL-Dateien im Ordner sammeln
 files = sorted(glob.glob(os.path.join(FOLDER, "*.json")) +
                glob.glob(os.path.join(FOLDER, "*.jsonl")))
 if not files:
     sys.exit(f"Keine .json/.jsonl in {FOLDER}")
 
+# Alle Dokumente durchgehen, Titel+ID extrahieren und (falls Titel vorhanden) schreiben
 n_docs = n_titled = 0
 title_field = id_field = None
 samples = []
@@ -63,6 +71,7 @@ with open(OUT, "w", encoding="utf-8") as o:
         for rec in iter_records(path):
             if not isinstance(rec, dict): continue
             n_docs += 1
+            # beim ersten Datensatz das tatsaechlich genutzte Titel-/ID-Feld merken (nur fuer den Report)
             if title_field is None:
                 for c in TITLE_CANDS:
                     if pick({k:rec[k] for k in rec}, [c]) is not None:
@@ -77,6 +86,7 @@ with open(OUT, "w", encoding="utf-8") as o:
                 o.write(f"{docid}\t{title}\n")
                 if len(samples) < 3: samples.append((docid, title))
 
+# Zusammenfassung samt erkannter Felder und ein paar Beispielen ausgeben
 print(f"Dateien verarbeitet     : {len(files)}")
 print(f"Dokumente gesamt        : {n_docs:,}")
 print(f"davon mit Titel         : {n_titled:,}")

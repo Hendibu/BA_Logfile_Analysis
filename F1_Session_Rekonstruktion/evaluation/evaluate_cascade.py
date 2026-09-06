@@ -1,25 +1,28 @@
-# ============================================================================
-# evaluate_cascade.py  -- Auswertung der fertigen Kaskaden-Ausgabe
-# Rechnet aus cascade_full_1234.tsv alle Kennzahlen fuer die Arbeit:
-#   * Beitrag jeder Stufe (wie viele Fortsetzungen/Grenzen)
-#   * Anzahl Sessions, Session-Laengen- und -Dauer-Verteilung
-#   * ESA-Cosinus-Verteilung (zum spaeteren Nachjustieren von ESA_TH)
-# Speicherkonstant: Sessions liegen in der Ausgabe zusammenhaengend vor.
-# ============================================================================
+# evaluate_cascade.py -- Auswertung der fertigen Kaskaden-Ausgabe.
+# Rechnet alle Kennzahlen fuer die Arbeit: Beitrag jeder Stufe, Anzahl Sessions,
+# Session-Laengen- und -Dauer-Verteilung sowie ESA-Cosinus-Verteilung.
+# Eingabe: cascade_full_1234.tsv | Ausgabe: cascade_eval.txt
+
 import csv, numpy as np
 
+# Eingabe- und Ausgabepfad
 INP = "../../data/cascade_full_1234.tsv"; REPORT = "../../data/cascade_eval.txt"
 csv.field_size_limit(2**31 - 1)
 
+# Zaehler je Stufe/Grenze sowie Sammellisten fuer Laenge, Dauer und ESA-Werte;
+# cur_* verfolgen die gerade laufende Session
 cnt = {"start":0,"gap":0,"s1":0,"s2":0,"s3":0,"s4":0,"boundary":0}
 sess_len = []; sess_dur = []; esa_vals = []
 cur_id = None; cur_n = 0; cur_min = None; cur_max = None; rows = 0
 
+# Laufende Session abschliessen: Laenge und Dauer (Minuten) festhalten
 def close_session():
     if cur_id is not None:
         sess_len.append(cur_n)
         sess_dur.append((cur_max - cur_min) / 60.0)   # Minuten
 
+# Ausgabe zeilenweise lesen (Sessions liegen zusammenhaengend vor -> speicherkonstant),
+# dabei Stufen zaehlen, ESA-Werte sammeln und Session-Laenge/-Dauer mitfuehren
 with open(INP, newline="", encoding="utf-8") as f:
     r = csv.reader(f, delimiter="\t"); h = next(r)
     i_sid, i_ts, i_ec, i_st = (h.index("session_id"), h.index("ts"),
@@ -36,14 +39,17 @@ with open(INP, newline="", encoding="utf-8") as f:
         cur_n += 1; cur_min = min(cur_min, ts); cur_max = max(cur_max, ts)
     close_session()
 
+# Kennzahlen ableiten: Paare, Fortsetzungen, Grenzen, Sessionzahl; Listen zu Arrays
 pairs   = rows - cnt["start"]
 cont    = cnt["s1"] + cnt["s2"] + cnt["s3"] + cnt["s4"]
 bound   = cnt["gap"] + cnt["boundary"]
 n_sess  = len(sess_len)
 L = np.array(sess_len); D = np.array(sess_dur); E = np.array(esa_vals)
 
+# Hilfsfunktion: Absolutwert mit Prozentanteil an einer Basis formatieren
 def pct(x, base): return f"{x:,} ({100*x/base:.1f}%)" if base else f"{x:,}"
 
+# Bericht Zeile fuer Zeile zusammenbauen
 lines = []
 lines.append("=== KASKADE — AUSWERTUNG ===")
 lines.append(f"Zeilen (Queries):        {rows:,}")
@@ -63,6 +69,7 @@ lines.append("")
 lines.append("--- Session-Laenge (Queries/Session) ---")
 lines.append(f"Mittel {L.mean():.2f} | Median {int(np.median(L))} | "
              f"Min {L.min()} | Max {L.max()}")
+# Sessions in Groessenklassen einteilen und je Klasse Anteil ausweisen
 for lo, hi, name in [(1,1,"1 (Singletons)"),(2,5,"2-5"),(6,10,"6-10"),
                      (11,50,"11-50"),(51,10**9,">50")]:
     c = int(((L >= lo) & (L <= hi)).sum())
@@ -72,6 +79,7 @@ lines.append("--- Session-Dauer (Minuten) ---")
 lines.append(f"Mittel {D.mean():.1f} | Median {np.median(D):.1f} | Max {D.max():.1f}")
 lines.append("")
 lines.append("--- ESA-Cosinus (nur Paare, die Stufe 3 erreichten) ---")
+# ESA-Verteilung samt Perzentilen; zusaetzlich, wie viele Paare je Schwellwert gehalten wuerden
 if E.size:
     qs = np.percentile(E, [50,75,90,95,99])
     lines.append(f"Anzahl {E.size:,} | Mittel {E.mean():.4f} | "
@@ -82,6 +90,7 @@ if E.size:
 else:
     lines.append("keine ESA-Werte vorhanden.")
 
+# Bericht ausgeben und in die Report-Datei schreiben
 report = "\n".join(lines)
 print(report)
 with open(REPORT, "w", encoding="utf-8") as f:

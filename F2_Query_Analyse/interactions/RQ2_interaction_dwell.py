@@ -1,20 +1,25 @@
 # interaction_dwell.py <session_file>
 # Berechnet je (relevanter) Interaktion die Verweildauer = Zeit bis zum naechsten
-# Event derselben uid (aus dem ROHEN Log) und markiert plausibel (>= THRESHOLD s)
-# vs. zu kurz. Ausgabe: interactions_dwell.tsv
+# Event derselben uid (aus dem ROHEN Log) und markiert plausibel (>= THRESHOLD s) vs. zu kurz.
+# Eingabe: log_files.tsv, interactions.tsv, cascade_full_1234_nostruct.tsv (default)
+# Ausgabe: RQ2_interactions_dwell.tsv
+
 import csv, re, bisect, os, sys
 from collections import defaultdict
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 
+# Pfade und Schwelle: darunter gilt eine Interaktion als "zu kurz gelesen"
 RAW           = "../../data/log_files.tsv"
 INTERACTIONS  = "../../data/interactions.tsv"
 OUT           = "../../data/RQ2_interactions_dwell.tsv"
 SESSION_FILE  = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
 THRESHOLD     = 30    # Sekunden: darunter = "zu kurz". ~120 Woerter bei 238 WpM.
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
+# Zeitstempel zu Unix-Sekunden: akzeptiert Zahl (Sekunden/Millisekunden) und mehrere Datumsformate
 def to_epoch(s):
     s = s.strip()
     if not s: return None
@@ -25,6 +30,7 @@ def to_epoch(s):
         except ValueError: continue
     return None
 
+# search_ids der Session-Datei sammeln (nur Interaktionen zu diesen Suchen zaehlen)
 def target_sids(session_file):
     s = set()
     if not os.path.exists(session_file): return s
@@ -34,6 +40,7 @@ def target_sids(session_file):
             if row[i]: s.add(row[i])
     return s
 
+# Relevante Interaktionen laden (merge_key in Zielmenge) + Menge der beteiligten uids
 def relevant_interactions(path, tsids):
     rel = []; uids = set()
     with open(path, newline="", encoding="utf-8") as f:
@@ -44,6 +51,7 @@ def relevant_interactions(path, tsids):
                 rel.append((row[iu], int(row[its]), row[ity], row[imk])); uids.add(row[iu])
     return rel, uids
 
+# Aus dem Rohlog je relevanter uid eine sortierte Liste aller Event-Zeitpunkte bauen
 def build_timeline(raw, uids):
     tl = defaultdict(list)                      # uid -> sortierte Liste aller Event-ts
     with open(raw, newline="", encoding="utf-8") as f:
@@ -59,6 +67,7 @@ def build_timeline(raw, uids):
     for u in tl: tl[u].sort()
     return tl
 
+# Gesamtablauf: je Interaktion die Verweildauer bis zum naechsten uid-Event bestimmen und schreiben
 def run(raw=RAW, interactions=INTERACTIONS, out=OUT, session_file=SESSION_FILE, threshold=THRESHOLD):
     tsids = target_sids(session_file)
     rel, uids = relevant_interactions(interactions, tsids)

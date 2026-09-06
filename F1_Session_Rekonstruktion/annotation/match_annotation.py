@@ -1,24 +1,27 @@
 # match_annotation.py <file_A> <file_B>
 # Nimmt je K Sessions mit >= MIN_Q Queries aus BEIDEN Session-Dateien und stellt
 # jeder Anker-Session die passende Session der ANDEREN Methode gegenueber.
-# Match ueber search_id (= gleiche Queries), NICHT ueber uid -> auch bei uids mit
-# mehreren Sessions wird die inhaltlich passende getroffen.
-# Ausgabe: annotation_vergleich.txt  (enthaelt echte Queries -> bleibt LOKAL, NDA).
+# Match ueber search_id (= gleiche Queries)
+# Ausgabe: annotation_vergleich.txt
+
 import csv, sys, random
 from collections import defaultdict
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 random.seed(42)
 
+# Beide Eingabedateien (Argument oder Standard), Anzahl je Methode und Mindestlaenge
 A_LABEL, A_PATH = "Kaskade", (sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv")
 B_LABEL, B_PATH = "DIS22",   (sys.argv[2] if len(sys.argv) > 2 else "../../data/dis22_sessions_nostruct.tsv")
 K = 20; MIN_Q = 3
 OUT = "../../data/annotation_vergleich.txt"
 
+# Hilfsfunktionen: NUL-Bytes entfernen, Zeitstempel lesbar formatieren
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
 def fmt(ts): return datetime.fromtimestamp(int(ts), tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
 
+# Session-Datei einlesen: je search_id die Event-Infos und je Session die search_ids sammeln
 def load(path):
     ev = {}; sess = defaultdict(list)          # search_id->(sid,ts,query,uid) ; sid->[search_id]
     with open(path, newline="", encoding="utf-8") as f:
@@ -32,11 +35,13 @@ def load(path):
             ev[sc] = (sid, int(row[i_ts]), row[i_q], row[i_uid]); sess[sid].append(sc)
     return ev, sess
 
+# Beide Methoden laden und je search_id die Session-ID der anderen Methode nachschlagbar machen
 evA, sessA = load(A_PATH)
 evB, sessB = load(B_PATH)
 sc2sidB = {sc: evB[sc][0] for sc in evB}
 sc2sidA = {sc: evA[sc][0] for sc in evA}
 
+# Zu einer Anker-Session die Session der anderen Methode mit den meisten gemeinsamen search_ids finden
 def best_match(anchor_scs, sc2other):
     cnt = defaultdict(int)
     for sc in anchor_scs:
@@ -45,16 +50,19 @@ def best_match(anchor_scs, sc2other):
     if not cnt: return None, 0
     b = max(cnt.items(), key=lambda x: x[1]); return b[0], b[1]
 
+# Zufaellig k Sessions mit >= MIN_Q Queries auswaehlen
 def pick(sess, k):
     cand = [sid for sid, scs in sess.items() if len(scs) >= MIN_Q]
     random.shuffle(cand); return cand[:k]
 
+# Eine Session lesbar (nach Zeit sortiert) in die Ausgabedatei schreiben
 def render(fo, label, sid, scs, ev):
     rows = sorted((ev[sc][1], ev[sc][2]) for sc in scs)
     uid = ev[scs[0]][3] if scs else "?"
     fo.write(f"--- {label} | session {sid} | {len(scs)} Queries | uid {uid} ---\n")
     for ts, q in rows: fo.write(f"    {fmt(ts)}   {q}\n")
 
+# Vergleichsfaelle bilden: je Methode K Anker-Sessions ziehen und die Gegenstueck-Session suchen
 cases = []
 for sid in pick(sessA, K):
     scs = sessA[sid]; msid, shared = best_match(scs, sc2sidB)
@@ -63,6 +71,7 @@ for sid in pick(sessB, K):
     scs = sessB[sid]; msid, shared = best_match(scs, sc2sidA)
     cases.append((B_LABEL, sid, scs, evB, A_LABEL, msid, sessA.get(msid, []), evA, shared))
 
+# Alle Faelle als gegenuebergestellte Bloecke (Anker vs. gematchte Session) ausgeben
 with open(OUT, "w", encoding="utf-8") as fo:
     for i, (la, sida, scsa, eva, lb, sidb, scsb, evb, shared) in enumerate(cases, 1):
         fo.write("=" * 78 + "\n")

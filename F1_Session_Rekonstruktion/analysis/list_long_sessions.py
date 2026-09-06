@@ -1,25 +1,30 @@
 # list_long_sessions.py -- listet Sessions mit >= MIN_Q Queries lesbar auf,
 # getrennt fuer Kaskade und DIS22, zum manuellen Durchsehen/Auswaehlen.
 # Ausgabe: cascade_long.txt und dis22_long.txt (Sessions durch Leerzeilen getrennt).
+
 import csv, random
 from collections import Counter
 from datetime import datetime, timezone
 random.seed(42)
 csv.field_size_limit(2**31 - 1)
 
+# Parameter: Mindestlaenge einer Session und max. Anzahl je Datei (Zufallsstichprobe)
 MIN_Q = 3
 LIMIT = 400          # max. so viele Sessions je Datei (Zufallsstichprobe; hoeher = mehr)
 
+# Zu verarbeitende Quellen: (Label, Eingabedatei, Session-Spalte, Ausgabedatei)
 SOURCES = [
     ("Kaskade", "../../data/cascade_full_1234_nobots.tsv",       "session_id",     "../../data/cascade_long.txt"),
     ("DIS22",   "../../data/dis22_sessions_nobots.tsv", "session_id", "../../data/dis22_long.txt"),
 ]
 
+# Hilfsfunktionen: Zeitstempel lesbar formatieren und NUL-Bytes entfernen
 def fmt_ts(s):
     return datetime.fromtimestamp(int(s), tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
 
+# Jede Quelle (Kaskade, DIS22) getrennt verarbeiten
 for label, path, sidcol, out in SOURCES:
     sample = []; seen = 0
     def consider(sid, buf):                      # Reservoir-Sampling ueber alle >=MIN_Q Sessions
@@ -30,6 +35,8 @@ for label, path, sidcol, out in SOURCES:
         else:
             j = random.randint(0, seen - 1)
             if j < LIMIT: sample[j] = (sid, buf)
+
+    # Datei einlesen und Sessions blockweise sammeln, jede fertige Session an consider() geben
     with open(path, newline="", encoding="utf-8") as f:
         r = csv.reader(strip_nul(f), delimiter="\t"); h = next(r)
         i_sid, i_ts, i_q, i_uid = h.index(sidcol), h.index("ts"), h.index("query"), h.index("uid")
@@ -42,6 +49,7 @@ for label, path, sidcol, out in SOURCES:
             buf.append((row[i_ts], row[i_q], row[i_uid]))
         if cur is not None: consider(cur, buf)
 
+    # Gezogene Stichprobe lesbar in die Ausgabedatei schreiben (Kopfzeile + Sessions)
     with open(out, "w", encoding="utf-8") as fo:
         fo.write(f"# {label}: {len(sample)} von {seen} Sessions mit >= {MIN_Q} Queries "
                  f"(Zufallsstichprobe, LIMIT={LIMIT})\n\n")

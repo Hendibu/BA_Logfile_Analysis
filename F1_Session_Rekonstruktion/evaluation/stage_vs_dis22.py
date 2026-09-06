@@ -1,37 +1,32 @@
 # stage_vs_dis22.py  [kaskade_datei] [dis22_datei]
-# --------------------------------------------------------------------------
-# Nutzt die vorhandene "stage"-Spalte der Kaskade (s1..s4/grp/gap/boundary/start)
-# und kreuzt sie mit DIS22: Fuer jede Kaskaden-VERKETTUNG (stage in s1..s4, also
-# "gleiche Session wie Vorgaenger") wird geprueft, ob DIS22 dieselben zwei
-# aufeinanderfolgenden Queries ebenfalls in einer Session hat -- oder trennt.
-#
-# Ergebnis pro Stufe:
-#   - wie oft die Stufe verkettet hat (gesamt)
-#   - davon: DIS22 haelt ebenfalls zusammen  vs.  DIS22 TRENNT (= Extra-Verkettung)
-# Die Stufe mit den meisten Extra-Verkettungen macht die Kaskade laenger.
-#
-# Zusaetzlich: Zeitabstands-Verteilung der Extra-Verkettungen (zeigt den Effekt
-# des 90-min-Fensters gegenueber DIS22' 5-min-Grenze).
-#
-# Nur Aggregate -> NDA-sicher. Verknuepfung ueber search_id.
-# --------------------------------------------------------------------------
+# Kreuzt die "stage"-Spalte der Kaskade (s1..s4/grp/gap/boundary/start) mit DIS22:
+# fuer jede Kaskaden-Verkettung (stage s1..s4) wird geprueft, ob DIS22 dieselben
+# zwei aufeinanderfolgenden Queries ebenfalls zusammenhaelt oder trennt.
+# Ausgabe je Stufe: Verkettungen gesamt, davon DIS22 haelt vs. DIS22 trennt
+# (= Extra-Verkettung); zusaetzlich Zeitabstands-Verteilung der Extra-Verkettungen
+# (Effekt des 90-min-Fensters ggue. DIS22' 5-min-Grenze). Verknuepfung ueber search_id.
+
 import csv, sys
 from collections import Counter, defaultdict
 csv.field_size_limit(2**31 - 1)
 
+# Eingaben (Argument oder Standard) und die stage-Werte, die eine Verkettung bedeuten
 CASC = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234.tsv"
 DIS  = sys.argv[2] if len(sys.argv) > 2 else "../../data/dis22_sessions.tsv"
 MERGE_STAGES = {"s1", "s2", "s3", "s4"}
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo:
         yield line.replace("\x00", "")
 
+# Ersten passenden Spaltenindex aus einer Kandidatenliste finden
 def find(h, cands):
     for c in cands:
         if c in h: return h.index(c)
     return None
 
+# Kopfzeile lesen und die benoetigten Spaltenindizes bestimmen (fehlt eine, Abbruch)
 def cols(path, need):
     with open(path, newline="", encoding="utf-8", errors="replace") as f:
         h = next(csv.reader(strip_nul(f), delimiter="\t"))
@@ -43,7 +38,7 @@ def cols(path, need):
         idx[key] = i
     return idx
 
-# 1) DIS22: search_id -> session
+# 1) DIS22: search_id -> session (Nachschlagetabelle, welche DIS22-Session eine Query hat)
 di = cols(DIS, {"sid": ["search_id"], "sess": ["session_id","sid","session"]})
 dis_of = {}
 with open(DIS, newline="", encoding="utf-8", errors="replace") as f:
@@ -57,12 +52,14 @@ with open(DIS, newline="", encoding="utf-8", errors="replace") as f:
 ci = cols(CASC, {"sid": ["search_id"], "sess": ["session_id","sid","session"],
                  "stage": ["stage"], "ts": ["ts"]})
 
+# Zaehler je Stufe: gesamt, von DIS22 getrennt, von DIS22 gehalten, unbekannt; + Zeitabstands-Buckets
 stage_total = Counter()
 stage_split = Counter()
 stage_keep  = Counter()
 stage_unk   = Counter()
 gap_bucket  = defaultdict(Counter)
 
+# Zeitabstand eines Paares in eine grobe Klasse einordnen
 def bucket(g):
     if g < 300:  return "< 5 min"
     if g < 600:  return "5-10 min"
@@ -70,6 +67,7 @@ def bucket(g):
     if g <= 5400:return "30-90 min"
     return "> 90 min"
 
+# Kaskade zeilenweise lesen; bei jeder Verkettung (s1..s4) das Vorgaenger-Paar in DIS22 nachschlagen
 with open(CASC, newline="", encoding="utf-8", errors="replace") as f:
     r = csv.reader(strip_nul(f), delimiter="\t"); next(r)
     prev_sid = None; prev_ts = None
@@ -80,6 +78,7 @@ with open(CASC, newline="", encoding="utf-8", errors="replace") as f:
         sq  = row[ci["sid"]].strip()
         ts  = row[ci["ts"]].strip()
         stage_total[st] += 1
+        # Nur Verkettungen pruefen: haelt DIS22 dasselbe Paar zusammen (keep) oder trennt es (split)?
         if st in MERGE_STAGES and prev_sid is not None:
             a = dis_of.get(prev_sid); b = dis_of.get(sq)
             if a is None or b is None:
@@ -87,6 +86,7 @@ with open(CASC, newline="", encoding="utf-8", errors="replace") as f:
             elif a == b:
                 stage_keep[st] += 1
             else:
+                # Extra-Verkettung: nur die Kaskade verbindet -> Zeitabstand in Bucket zaehlen
                 stage_split[st] += 1
                 try:
                     g = int(float(ts)) - int(float(prev_ts)); g = max(g, 0)
@@ -102,11 +102,13 @@ print("=" * 72)
 print(f"Kaskade: {CASC}")
 print(f"DIS22  : {DIS}\n")
 
+# Haeufigkeit aller stage-Werte
 print("Haeufigkeit aller stage-Werte in der Kaskade:")
 for st, c in stage_total.most_common():
     print(f"   {st:<10}{c:>14,}")
 print()
 
+# Gesamtbilanz: wie viele Verkettungen macht die Kaskade zusaetzlich zu DIS22
 merges = sum(stage_total[s] for s in MERGE_STAGES)
 extra  = sum(stage_split.values())
 print(f"Kaskaden-Verkettungen gesamt (s1..s4)        : {merges:,}")
@@ -114,6 +116,7 @@ if merges:
     print(f"davon von DIS22 GETRENNT (Extra-Verkettungen): {extra:,}  ({100*extra/merges:.1f}%)")
 print()
 
+# Aufschluesselung je Stufe (verkettet / DIS22 trennt / DIS22 haelt / unbekannt / Extra-Anteil)
 print(f"{'Stufe':<8}{'verkettet':>14}{'DIS22 trennt':>16}{'DIS22 haelt':>14}{'unbek.':>10}{'Extra-%':>10}")
 print("-" * 72)
 for st in ["s1", "s2", "s3", "s4"]:
@@ -126,6 +129,7 @@ print("-" * 72)
 print("'DIS22 trennt' = diese Verkettung macht NUR die Kaskade -> verlaengert.")
 print()
 
+# Zeitabstands-Verteilung der Extra-Verkettungen je Stufe
 print("Zeitabstand der Extra-Verkettungen je Stufe")
 print("(zeigt den Effekt des 90-min-Fensters ggue. DIS22' 5-min-Grenze):")
 order = ["< 5 min","5-10 min","10-30 min","30-90 min","> 90 min"]

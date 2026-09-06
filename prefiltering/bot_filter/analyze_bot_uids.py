@@ -1,21 +1,26 @@
 # analyze_bot_uids.py <session_file>
 # Stuft Sessions als bot-artig ein (SCHNELL und GLEICHMAESSIG getaktet), merkt sich die
 # uid, misst den Overlap Bot-/Gute-uids und schreibt eine Detail-Datei mit der
-# Standardabweichung der Zeitluecken je geflaggter Session. NDA-sichere Aggregate.
+# Standardabweichung der Zeitluecken je geflaggter Session.
 # Schwellen literaturgestuetzt: ~13 s mittlere SERP-Sichtung (Jiang, He & Allan 2014).
+# Eingabe: dis22_sessions.tsv (default) | Ausgabe: bot_sessions_detail.tsv
+
 import csv, sys, statistics
 from collections import defaultdict, Counter
 csv.field_size_limit(2**31 - 1)
 
+# Eingabe und Schwellen fuer die Bot-Erkennung (Mindestlaenge, Gleichmaessigkeit, Taktung)
 SRC          = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 MIN_Q        = 3      # >=3 Queries -> mind. 2 Luecken, um Gleichmaessigkeit zu beurteilen
 REG_STD      = 2.0    # Standardabw. der Zeitluecken <= das  -> "gleichmaessig getaktet"
 MAX_MEAN_GAP = 12     # mittlere Luecke <= das (s) -> schneller als ~13 s SERP-Sichtung
 DETAIL_OUT   = "../../data/bot_sessions_detail.tsv"   # je geflaggter Session: uid, n, mean_gap, std_gap
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
 
+# Session-Datei einlesen: je Session die Zeitstempel und die uid sammeln
 sess_ts = defaultdict(list); sess_uid = {}
 with open(SRC, newline="", encoding="utf-8") as f:
     r = csv.reader(strip_nul(f), delimiter="\t"); h = next(r)
@@ -27,6 +32,7 @@ with open(SRC, newline="", encoding="utf-8") as f:
         sess_ts[sid].append(int(row[i_ts]))
         if sid not in sess_uid: sess_uid[sid] = row[i_uid]
 
+# Je Session (ab MIN_Q) die Zeitluecken auswerten und bei schneller+gleichmaessiger Taktung als Bot flaggen
 uid_bot = defaultdict(int); uid_good = defaultdict(int)
 n_multi = n_bot = 0; gap_modes = Counter(); std_buckets = Counter()
 det = open(DETAIL_OUT, "w", newline="", encoding="utf-8"); dw = csv.writer(det, delimiter="\t")
@@ -50,9 +56,11 @@ for sid, tss in sess_ts.items():
         uid_good[u] += 1
 det.close()
 
+# Overlap bestimmen: uids mit bot-artigen und/oder guten Sessions
 bot_uids, good_uids = set(uid_bot), set(uid_good)
 both = bot_uids & good_uids; only_bot = bot_uids - good_uids
 
+# Ergebnisse ausgeben: Bot-Anteil, uid-Overlap, Gleichmaessigkeit und typische Taktung
 print(f"Datei: {SRC}  (Schwellen: mean_gap<={MAX_MEAN_GAP}s, std<={REG_STD}s, >= {MIN_Q} Queries)")
 print(f"Sessions mit >= {MIN_Q} Queries: {n_multi:,} | bot-artig: {n_bot:,} "
       f"({100*n_bot/max(n_multi,1):.1f}%)\n")

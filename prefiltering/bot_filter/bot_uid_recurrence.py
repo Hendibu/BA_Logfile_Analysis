@@ -1,16 +1,21 @@
 # bot_uid_recurrence.py <session_file>
 # Zeigt, ob/wie stark Bot-uids wiederverwendet werden: Verteilung der Bot-Sessions
 # je Bot-uid, Konzentration, und ob die Top-Bot-uids rein oder geteilt (VPN) sind.
+# Eingabe: cascade_full_1234.tsv (default)
+
 import csv, sys, statistics
 from collections import defaultdict, Counter
 csv.field_size_limit(2**31 - 1)
 
+# Eingabe und Schwellen der Bot-Erkennung (Mindestlaenge, Taktung, Gleichmaessigkeit)
 SRC = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234.tsv"
 MIN_TIMING_Q, MAX_MEAN_GAP, REG_STD = 3, 12, 2.0
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
 
+# Session-Datei einlesen: je Session die Zeitstempel und die uid sammeln
 ts_by = defaultdict(list); uid_by = {}
 with open(SRC, newline="", encoding="utf-8") as f:
     r = csv.reader(strip_nul(f), delimiter="\t"); h = next(r)
@@ -21,6 +26,7 @@ with open(SRC, newline="", encoding="utf-8") as f:
         if not sid: continue
         ts_by[sid].append(int(row[i_ts])); uid_by.setdefault(sid, row[i_uid])
 
+# Je Session anhand der Zeitluecken als bot-artig oder gut einstufen und je uid zaehlen
 uid_bot = Counter(); uid_good = Counter()
 for sid, tss in ts_by.items():
     c = len(tss)
@@ -31,6 +37,7 @@ for sid, tss in ts_by.items():
     if mg <= MAX_MEAN_GAP and sd <= REG_STD: uid_bot[u] += 1
     else:                                    uid_good[u] += 1
 
+# Verteilung, Konzentration und Wiederverwendung der Bot-uids ausgeben
 counts = sorted(uid_bot.values(), reverse=True)
 total = sum(counts); n = len(counts)
 print(f"{n:,} Bot-uids | {total:,} Bot-Sessions | Schnitt {total/max(n,1):.1f} Bot-Sessions/uid")
@@ -43,6 +50,7 @@ if counts:
     top10 = sum(counts[:10])
     print(f"Konzentration: die 10 aktivsten Bot-uids = {top10:,} Bot-Sessions "
           f"({100*top10/total:.1f}% aller Bot-Sessions)")
+    # Top-Bot-uids: rein Bot oder auch mit guten Sessions (geteilt, z.B. VPN)
     print("\nTop-Bot-uids (Bot-Sessions / gute Sessions):")
     for u, cbot in uid_bot.most_common(10):
         tag = "REIN Bot" if uid_good.get(u, 0) == 0 else "geteilt (auch gut)"

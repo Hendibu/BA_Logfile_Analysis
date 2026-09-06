@@ -1,17 +1,20 @@
 # filter_struct_sessions.py <session_file>
 # Entfernt GANZE Sessions, die
-#   (A) strukturierte Filter-/Bot-Queries enthalten (yearPublished>=…, Vergleichs-
-#       operatoren, boolesche AND()/OR()) -- Anteil > MIN_STRUCT_FRAC, ODER
+#   (A) einen Anteil strukturierter Filter-/Bot-Queries > MIN_STRUCT_FRAC haben
+#       (yearPublished>=…, Vergleichsoperatoren, boolesche AND()/OR()), ODER
 #   (B) mehr als 1 Query haben und aus der EXAKT selben Query bestehen (Wiederholung).
-# Ausgabe: <name>_nostruct.tsv . Schnell, kein Neu-Rechnen noetig.
+# Eingabe: dis22_sessions.tsv (default) | Ausgabe: <eingabe>_nostruct.tsv
+
 import csv, sys, re
 from collections import defaultdict
 csv.field_size_limit(2**31 - 1)
 
+# Eingabe, Anteils-Schwelle fuer (A) und Muster fuer strukturierte Filter-Queries
 SRC = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 MIN_STRUCT_FRAC = 0.6     # (A) Session raus, wenn Anteil strukturierter Queries > diesem Wert
 PAT = re.compile(r'yearPublished|(<=|>=|<|>)\s*\d|\bAND\s*\(|\bOR\s*\(', re.IGNORECASE)
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
 
@@ -29,13 +32,14 @@ with open(SRC, newline="", encoding="utf-8") as f:
         if sid not in firsthash: firsthash[sid] = qh; allsame[sid] = True
         elif qh != firsthash[sid]: allsame[sid] = False
 
+# Aus den Aggregaten die zu entfernenden Sessions bestimmen: (A) zu strukturiert, (B) reine Wiederholung
 struct_drop = {sid for sid in tot if struct[sid] > 0 and struct[sid]/tot[sid] > MIN_STRUCT_FRAC}  # (A)
 dup_drop    = {sid for sid in tot if tot[sid] >= 2 and allsame[sid]}                              # (B)
 drop = struct_drop | dup_drop
 print(f"{len(tot):,} Sessions | (A) strukturiert: {len(struct_drop):,} | "
       f"(B) reine Wiederholungen: {len(dup_drop):,} | entfernt gesamt: {len(drop):,}")
 
-# Pass 2: Sessions in 'drop' komplett rauswerfen
+# Pass 2: Datei erneut lesen und alle Zeilen der markierten Sessions verwerfen
 OUT = SRC.replace(".tsv", "_nostruct.tsv")
 kept = dropped = 0
 with open(SRC, newline="", encoding="utf-8") as f, open(OUT, "w", newline="", encoding="utf-8") as o:

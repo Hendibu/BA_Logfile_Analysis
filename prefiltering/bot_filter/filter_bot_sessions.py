@@ -1,16 +1,20 @@
 # filter_bot_sessions.py <session_file>
 # Entfernt GANZE Sessions, die entweder
-#   (A) NUR aus strukturierten Filter-Queries bestehen UND kleine Zeitspanne haben
+#   (A) NUR aus strukturierten Filter-Queries bestehen UND eine kleine Zeitspanne haben
 #       (Bot-Sweeps ueber die Jahreszahl), ODER
 #   (B) mehr als 1 Query haben und aus der EXAKT selben Query bestehen (Wiederholung).
-# Exposé 4.3: Session-Level-Bot-Filter NACH der Rekonstruktion. sidcol autom. erkannt.
+# Session-Level-Bot-Filter NACH der Rekonstruktion; sidcol wird automatisch erkannt.
+# Eingabe: dis22_sessions.tsv (default) | Ausgabe: <eingabe>_nobots.tsv
+
 import csv, sys, re
 csv.field_size_limit(2**31 - 1)
 
+# Eingabe, Zeitspannen-Schwelle fuer Sweeps und Muster fuer strukturierte Filter-Queries
 SRC = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 MAX_SPAN_SEC = 120     # (A) Bot-Sweep, wenn alle Queries strukturiert UND Spanne <= das
 PAT = re.compile(r'yearPublished|(<=|>=|<|>)\s*\d|\bAND\s*\(|\bOR\s*\(', re.IGNORECASE)
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
 
@@ -32,6 +36,7 @@ with open(SRC, newline="", encoding="utf-8") as f:
             if ts > e[3]: e[3] = ts
             if qh != e[4]: e[5] = False          # andere Query gesehen -> nicht alle gleich
 
+# Aus den Aggregaten die zu entfernenden Sessions bestimmen: (A) Sweeps und (B) reine Wiederholungen
 sweep = set(); dup = set()
 for sid, (c, allm, mn, mx, qh, allsame) in agg.items():
     if allm and (mx - mn) <= MAX_SPAN_SEC: sweep.add(sid)     # (A)
@@ -40,7 +45,7 @@ bot = sweep | dup
 print(f"{len(agg):,} Sessions | Bot-Sweeps (A): {len(sweep):,} | "
       f"reine Wiederholungen (B): {len(dup):,} | entfernt gesamt: {len(bot):,}")
 
-# Pass 2: Sessions in 'bot' komplett rauswerfen
+# Pass 2: Datei erneut lesen und alle Zeilen der markierten Sessions verwerfen
 OUT = SRC.replace(".tsv", "_nobots.tsv")
 kept = dropped = 0
 with open(SRC, newline="", encoding="utf-8") as f, open(OUT, "w", newline="", encoding="utf-8") as o:

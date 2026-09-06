@@ -10,29 +10,30 @@
 # Verknuepfung der Events beider Dateien ueber die search_id (eindeutig je Query).
 # Events der alten Session, die in der neuen Datei fehlen, sind wegen LEERER uid
 # entfernt worden (die neue Datei baut auf dis22_uidday.tsv auf).
-#
-# (A) und (B) sind Aggregate -> NDA-sicher / teilbar.
-# (C) enthaelt echte Queries -> bleibt LOKAL, nicht an Dritte/AI weitergeben.
 # --------------------------------------------------------------------------
 import csv, sys, os
 from collections import Counter
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 
+# Eingaben (Argument oder Standard) und Schwelle, ab der eine alte Session "lang" ist
 WRONG = sys.argv[1] if len(sys.argv) > 1 else "../../data/(WRONG)cascade_full_1234.tsv"
 RIGHT = sys.argv[2] if len(sys.argv) > 2 else "../../data/cascade_full_1234.tsv"
 LONG_MIN = 4          # ab wie vielen Queries eine alte Session als "lang" gilt
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo:
         yield line.replace("\x00", "")
 
+# Ersten passenden Spaltenindex aus einer Kandidatenliste finden
 def find_col(header, candidates):
     for c in candidates:
         if c in header:
             return header.index(c)
     return None
 
+# Kopfzeile lesen und die benoetigten Spaltenindizes bestimmen (search_id + Session-Spalte Pflicht)
 def detect_cols(path):
     with open(path, newline="", encoding="utf-8", errors="replace") as f:
         h = next(csv.reader(strip_nul(f), delimiter="\t"))
@@ -45,6 +46,7 @@ def detect_cols(path):
         sys.exit(f"{path}: brauche search_id und eine Session-Spalte. Header: {h}")
     return h, isid, iu, its, iq, isess
 
+# Aus einem Groessen-Histogramm Kennzahlen ableiten
 def stats_from_hist(hist):
     """hist: Counter{groesse: anzahl_sessions} -> Kennzahlen."""
     n = sum(hist.values())
@@ -65,6 +67,7 @@ def stats_from_hist(hist):
     return dict(n=n, mean=total/n, median=median, mx=mx,
                 singleton_pct=100*singleton/n, ge4_pct=100*ge4/n)
 
+# Zeitstempel lesbar formatieren (mit Fallback, falls kein gueltiger Wert)
 def ep(ts):
     try:
         return datetime.fromtimestamp(int(float(ts)), tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -96,6 +99,8 @@ uidcount_hist   = Counter()
 sum_dropped = sum_split = sum_uids = n_long = 0
 best_example = None
 
+# Eine abgeschlossene ALTE Session auswerten: in wie viele neue Sessions sie zerfaellt,
+# wie viele distinct uids sie enthaelt und wie viele Events (leere uid) entfernt wurden
 def finalize(sid, rows):
     global sum_dropped, sum_split, sum_uids, n_long, best_example
     size = len(rows)
@@ -116,11 +121,13 @@ def finalize(sid, rows):
     split_hist[nsplit] += 1
     uidcount_hist[len(uids)] += 1
     sum_split += nsplit; sum_dropped += dropped; sum_uids += len(uids)
+    # Kandidat fuer das Anschauungs-Beispiel merken (mittelgross, mehrere neue Sessions und uids)
     if 5 <= size <= 20 and nsplit >= 2 and len(uids) >= 2:
         score = (nsplit, len(uids), -size)
         if best_example is None or score > best_example[0]:
             best_example = (score, sid, rows[:])
 
+# FALSCHE Datei zeilenweise lesen, Sessions blockweise sammeln und je Block finalize() aufrufen
 with open(WRONG, newline="", encoding="utf-8", errors="replace") as f:
     r = csv.reader(strip_nul(f), delimiter="\t"); next(r)
     cur = None; buf = []
@@ -144,8 +151,9 @@ with open(WRONG, newline="", encoding="utf-8", errors="replace") as f:
 ws = stats_from_hist(wrong_size_hist)
 rs = stats_from_hist(dict(Counter(right_size.values())))
 
+# (A) Gesamtvergleich der Groessenverteilung: alt (globaler Strom) vs. neu (uid-Tag)
 print("=" * 70)
-print("(A) GESAMTVERGLEICH   [Aggregate -> teilbar]")
+print("(A) GESAMTVERGLEICH   ")
 print("=" * 70)
 print(f"{'':28}{'ALT (global)':>18}{'NEU (uid-Tag)':>18}")
 print(f"{'Sessions gesamt':28}{ws['n']:>18,}{rs['n']:>18,}")
@@ -155,9 +163,10 @@ print(f"{'mittlere Groesse':28}{ws['mean']:>18.2f}{rs['mean']:>18.2f}")
 print(f"{'Median-Groesse':28}{ws['median']:>18,}{rs['median']:>18,}")
 print(f"{'max. Groesse':28}{ws['mx']:>18,}{rs['mx']:>18,}")
 
+# (B) Wie stark die langen alten Sessions in mehrere neue Sessions zerfallen
 print()
 print("=" * 70)
-print(f"(B) AUFSPLITTUNG DER LANGEN ALTEN SESSIONS (>= {LONG_MIN} Queries)   [teilbar]")
+print(f"(B) AUFSPLITTUNG DER LANGEN ALTEN SESSIONS (>= {LONG_MIN} Queries) ")
 print("=" * 70)
 if n_long:
     print(f"betrachtete lange alte Sessions      : {n_long:,}")
@@ -177,9 +186,10 @@ if n_long:
 else:
     print("Keine langen alten Sessions gefunden.")
 
+# (C) Ein konkretes Beispiel: welche Query in welche neue Session gewandert ist
 print()
 print("=" * 70)
-print("(C) BEISPIEL-SESSION   [enthaelt echte Queries -> LOKAL behalten]")
+print("(C) BEISPIEL-SESSION   ")
 print("=" * 70)
 if best_example is None:
     print("Kein passendes Beispiel (5-20 Queries, >=2 neue Sessions, >=2 uids) gefunden.")
@@ -187,6 +197,7 @@ else:
     _, sid, rows = best_example
     rows_sorted = sorted(rows, key=lambda x: (x[1] if x[1] else ""))
     print(f"Alte Session-ID: {sid}   ({len(rows)} Queries)")
+    # Jeder neuen Ziel-Session eine lesbare Nummer (NEU-1, NEU-2, ...) zuordnen
     nummer = {}
     for (u, ts, sq, q) in rows_sorted:
         tgt = right_sess_of.get(sq)

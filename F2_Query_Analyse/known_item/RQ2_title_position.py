@@ -2,14 +2,17 @@
 # Verteilung der Titel-Queries (Query == echter Paper-Titel):
 #   (A) nach Session-Laenge (Singleton vs. Mehr-Query) + Trefferrate je Laenge
 #   (B) Position der Titel-Query innerhalb der Session (erste/mittlere/letzte)
-# Nur Aggregate -> teilbar. Nutzt doc_titles.tsv.
+# Eingabe: cascade_full_1234_nostruct.tsv (default), doc_titles.tsv
+
 import csv, sys, re
 from collections import Counter
 csv.field_size_limit(2**31 - 1)
 
+# Session-Datei (Argument oder Standard) und Titel-Index
 SRC   = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
 TITLE = "../../data/doc_titles.tsv"
 
+# Hilfsfunktionen: NUL-Bytes entfernen, Text normalisieren, Spaltenindex finden, Laengenklasse bilden
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00","")
 def norm(s):
@@ -27,6 +30,7 @@ def bucket(n):
     return "11+"
 BUCKETS=["1 (Singleton)","2","3","4-5","6-10","11+"]
 
+# Titel-Index laden (normalisiert ins Set) fuer den exakten Titel-Abgleich
 titles=set()
 with open(TITLE, newline="", encoding="utf-8", errors="replace") as f:
     for row in csv.reader(strip_nul(f), delimiter="\t"):
@@ -35,21 +39,24 @@ with open(TITLE, newline="", encoding="utf-8", errors="replace") as f:
             if t: titles.add(t)
 print(f"Titel im Index: {len(titles):,}\n")
 
+# Kopfzeile der Session-Datei lesen und Spalten session_id + query bestimmen
 with open(SRC, newline="", encoding="utf-8", errors="replace") as f:
     h=next(csv.reader(strip_nul(f), delimiter="\t"))
 i_s=find(h,["session_id","sid","session"]); i_q=find(h,["query"])
 if i_s is None or i_q is None: sys.exit(f"Brauche session_id+query. Header:{h}")
 
+# Zaehler je Laengenklasse (Sessions, Titel-Sessions, Queries, Titel-Queries) und Positions-Zaehler
 q_total=Counter(); q_title=Counter()
 sess_total=Counter(); sess_withtitle=Counter()
 pos=Counter()
 tq_all=0; ts_all=0
 
+# Eine fertige Session auswerten: Titel-Treffer je Laengenklasse und ihre Position in der Session
 def finalize(qs):
     global tq_all, ts_all
     n=len(qs); b=bucket(n)
     sess_total[b]+=1; q_total[b]+=n
-    hits=[i for i,q in enumerate(qs) if q.strip() and norm(q) in titles]
+    hits=[i for i,q in enumerate(qs) if q.strip() and norm(q) in titles]   # Indizes der Titel-Queries
     q_title[b]+=len(hits); tq_all+=len(hits)
     if hits:
         sess_withtitle[b]+=1; ts_all+=1
@@ -57,6 +64,7 @@ def finalize(qs):
             for i in hits:
                 pos["erste" if i==0 else "letzte" if i==n-1 else "mittlere"]+=1
 
+# Session-Datei durchlaufen, Queries je Block sammeln und jede fertige Session auswerten
 with open(SRC, newline="", encoding="utf-8", errors="replace") as f:
     r=csv.reader(strip_nul(f), delimiter="\t"); next(r)
     cur=None; qs=[]
@@ -69,6 +77,7 @@ with open(SRC, newline="", encoding="utf-8", errors="replace") as f:
         qs.append(row[i_q])
     if cur is not None: finalize(qs)
 
+# (A) Titel-Queries nach Session-Laenge: Sessions, Titel-Sessions, Trefferrate und Anteil
 print("(A) TITEL-QUERIES NACH SESSION-LAENGE")
 print(f"{'Laenge':<15}{'Sess ges.':>11}{'Sess m.Titel':>14}{'Titel-Q':>10}{'Rate Q':>9}{'% aller TitelQ':>16}")
 print("-"*75)
@@ -81,6 +90,7 @@ for b in BUCKETS:
 print("-"*75)
 print(f"Titel-Queries gesamt: {tq_all:,} | Sessions mit >=1 Titel: {ts_all:,}")
 
+# Kurzfazit: Anteil der Titel-Sessions, die Einzelanfragen sind vs. Mehr-Query-Sessions
 singleton_ts=sess_withtitle.get('1 (Singleton)',0)
 print(f"\nDirekte Antwort: von {ts_all:,} Titel-Sessions sind "
       f"{singleton_ts:,} Singletons"
@@ -88,6 +98,7 @@ print(f"\nDirekte Antwort: von {ts_all:,} Titel-Sessions sind "
       + f" und {ts_all-singleton_ts:,} Mehr-Query-Sessions"
       + (f" ({100*(ts_all-singleton_ts)/ts_all:.1f}%)." if ts_all else "."))
 
+# (B) Position der Titel-Query innerhalb der Session (nur Mehr-Query-Sessions)
 print("\n(B) POSITION DER TITEL-QUERY (nur Mehr-Query-Sessions, n>=2)")
 pt=sum(pos.values())
 for k in ["erste","mittlere","letzte"]:

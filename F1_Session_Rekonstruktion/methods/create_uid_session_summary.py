@@ -1,8 +1,14 @@
+# uuid_sessions.py -- bildet UUID-Sessions (alle Ereignisse einer uid) und berechnet
+# je Session Query-Anzahl und Dauer sowie Gesamtstatistiken.
+# Eingabe: log_files_cleaned.tsv | Ausgabe: uuid_sessions_summary.tsv
+
 import polars as pl
 
+# Ein- und Ausgabepfad
 SRC = "../../data/log_files_cleaned.tsv"
 OUT = "../../data/uuid_sessions_summary.tsv"
 
+# Log als Lazy-Frame einlesen (wird erst beim collect() ausgewertet)
 lf = pl.scan_csv(SRC, separator="\t")
 
 # nur Zeilen mit uid; date als Unix-Sekunden interpretieren
@@ -12,7 +18,7 @@ lf = (lf
     .filter(pl.col("ts").is_not_null())
 )
 
-# UUID-Session = alle Ereignisse einer uid
+# UUID-Session = alle Ereignisse einer uid; je uid Anzahl, Start/Ende und Dauer (Minuten)
 sessions = (
     lf.group_by("uid").agg(
         pl.len().alias("n_queries"),
@@ -23,11 +29,13 @@ sessions = (
     .collect(engine="streaming")
 )
 
+# Kennzahlen (Sessionzahl, Queries pro Session, Dauer) ausgeben
 print("Anzahl UUID-Sessions (distinct uids):", sessions.height)
 print("Queries pro Session -> Mittel: {:.2f} | Median: {} | Max: {}".format(
     sessions["n_queries"].mean(), sessions["n_queries"].median(), sessions["n_queries"].max()))
 print("Dauer (Minuten)     -> Mittel: {:.1f} | Median: {:.1f} | Max: {:.1f}".format(
     sessions["dauer_min"].mean(), sessions["dauer_min"].median(), sessions["dauer_min"].max()))
 
+# Session-Tabelle speichern
 sessions.write_csv(OUT, separator="\t")
 print("gespeichert ->", OUT)

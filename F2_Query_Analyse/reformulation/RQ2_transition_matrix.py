@@ -1,22 +1,27 @@
 # transition_matrix.py <session_file>
 # Analysiert die ABFOLGE von Reformulierungsstrategien INNERHALB von Sessions:
 # fuer aufeinanderfolgende Reformulierungs-Labels (l_i -> l_{i+1}) wird eine
-# Uebergangsmatrix gebildet. Struktur-/Bot-Paare werden wie in 6.4 uebersprungen
-# und unterbrechen die Abfolge. NUR Aggregate (NDA-sicher).
+# Uebergangsmatrix gebildet. Struktur-/Bot-Paare werden uebersprungen und
+# unterbrechen die Abfolge.
+# Eingabe: cascade_full_1234_nostruct.tsv (default)
+
 import csv, sys, re
 from collections import Counter
 from RQ2_reformulation import classify
 csv.field_size_limit(2**31 - 1)
 
+# Eingabe, Struktur-/Bot-Filter und Anzeigereihenfolge der Strategien
 SESSION_FILE = sys.argv[1] if len(sys.argv) > 1 else "../../data/cascade_full_1234_nostruct.tsv"
 STRUCT = re.compile(r'year\s*:|yearpublished|(<=|>=|<|>)\s*\d|\bAND\s*\(|\bOR\s*\(', re.IGNORECASE)
 ORDER = ["Identical","Word Reorder","Whitespace/Punctuation","Remove Words","Add Words",
          "URL Stripping","Stemming","Form Acronym","Expand Acronym","Substring","Superstring",
          "Abbreviation","Word Substitution","Spelling Correction","New"]
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00","")
 
+# Session-Datei durchgehen: je Session die Reformulierungs-Labels bilden und Uebergaenge (Label->Label) zaehlen
 trans = Counter(); cur_total = Counter(); n_labels = 0; n_trans = 0
 with open(SESSION_FILE, newline="", encoding="utf-8") as f:
     r = csv.reader(strip_nul(f), delimiter="\t"); h = next(r)
@@ -35,6 +40,7 @@ with open(SESSION_FILE, newline="", encoding="utf-8") as f:
             trans[(prev_lab, lab)] += 1; cur_total[prev_lab] += 1; n_trans += 1
         prev_lab = lab; prev_q = q
 
+# Bedingte Uebergaenge P(naechste | aktuelle): je haeufiger Ausgangsstrategie die Top-3 Folgestrategien
 print(f"Reformulierungs-Labels: {n_labels:,} | Uebergaenge (l_i -> l_i+1): {n_trans:,}\n")
 print("=== Bedingte Uebergaenge P(naechste | aktuelle) fuer haeufige Ausgangs-Strategien ===")
 for cur in ORDER:
@@ -43,6 +49,8 @@ for cur in ORDER:
     nxts = sorted(((trans[(cur,n)], n) for n in ORDER if trans[(cur,n)]>0), reverse=True)[:3]
     parts = ", ".join(f"{n} {100*c/tot:.0f}%" for c,n in nxts)
     print(f"  {cur:20} (n={tot:,}): {parts}")
+
+# Die insgesamt haeufigsten Uebergaenge ausgeben
 print("\n=== Haeufigste Uebergaenge insgesamt ===")
 for (a,b),c in trans.most_common(15):
     print(f"  {a:18} -> {b:18} {c:,} ({100*c/n_trans:.1f}%)")

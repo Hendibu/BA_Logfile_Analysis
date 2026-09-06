@@ -1,21 +1,22 @@
 # check_getpdf_uid.py  [datei]
-# --------------------------------------------------------------------------
-# Bestaetigt, dass die get-pdf-Download-Suchen wegen LEERER uid entfernt werden.
-# Nimmt die Query-Zeilen aus <datei> (default: dis22_sorted_noburst.tsv), deren
-# search_id zu einem get-pdf-Event gehoert, und zaehlt leere vs. gefuellte uid.
-# Nur Aggregate -> NDA-sicher. Bleibt lokal.
-# --------------------------------------------------------------------------
+# Bestaetigt, dass die get-pdf-Download-Suchen wegen LEERER uid entfernt werden:
+# nimmt die Query-Zeilen aus <datei>, deren search_id zu einem get-pdf-Event gehoert,
+# und zaehlt leere vs. gefuellte uid.
+# Eingabe: interactions.tsv, dis22_sorted_noburst.tsv (default fuer <datei>)
+
 import csv, sys
 csv.field_size_limit(2**31 - 1)
 
+# Interaktionsdatei und zu pruefende Query-Datei (Argument oder Standard)
 INTER = "../../../data/interactions.tsv"
 SRC   = sys.argv[1] if len(sys.argv) > 1 else "../../../data/dis22_sorted_noburst.tsv"
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo:
         yield line.replace("\x00", "")
 
-# 1) get-pdf search_ids sammeln
+# 1) get-pdf search_ids (echte merge_keys) sammeln
 keys = set()
 with open(INTER, newline="", encoding="utf-8", errors="replace") as f:
     r = csv.reader(strip_nul(f), delimiter="\t"); h = next(r)
@@ -28,7 +29,7 @@ with open(INTER, newline="", encoding="utf-8", errors="replace") as f:
             if mk and mk != "undefined":
                 keys.add(mk)
 
-# 2) In SRC die zugehoerigen Query-Zeilen finden und uid pruefen
+# 2) In SRC die zugehoerigen Query-Zeilen finden und je Zeile leere vs. gefuellte uid zaehlen
 n_rows = n_empty = n_filled = 0
 seen = set()
 with open(SRC, newline="", encoding="utf-8", errors="replace") as f:
@@ -48,6 +49,7 @@ with open(SRC, newline="", encoding="utf-8", errors="replace") as f:
             n_filled += 1
         seen.add(sid)
 
+# Ergebnis ausgeben: gefundene Download-Query-Zeilen und Anteil leerer uid
 print(f"Quelle: {SRC}")
 print(f"Download-Query-Zeilen gefunden : {n_rows:,}  (distinct search_ids: {len(seen):,})")
 print(f"  davon uid LEER   : {n_empty:,}" + (f"  ({100*n_empty/n_rows:.1f}%)" if n_rows else ""))

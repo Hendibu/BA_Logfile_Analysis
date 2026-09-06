@@ -1,9 +1,14 @@
+# wikipedia_extraction.py -- extrahiert aus dem Simple-English-Wikipedia-XML-Dump
+# den Fliesstext aller Artikel (Namespace 0, keine Redirects) als JSONL.
+# Eingabe: simplewiki-latest-pages-articles.xml.bz2 | Ausgabe: wiki_articles.jsonl
+
 import bz2, io, os, json, time
 import mwxml
 import mwparserfromhell
 
-DUMP = r"C:\Bachelorarbeit\Wikipedia\enwiki-latest-pages-articles.xml.bz2"
-OUT  = r"C:\Bachelorarbeit\Wikipedia\wiki_articles_full.jsonl"
+# Lokale Pfade: Eingabe-Dump (.bz2) und Ausgabedatei (JSONL)
+DUMP = r"C:\Bachelorarbeit\Wikipedia\simplewiki-latest-pages-articles.xml.bz2"
+OUT  = r"C:\Bachelorarbeit\Wikipedia\wiki_articles.jsonl"
 
 # --- Fortschritts-Wrapper: zaehlt die gelesenen (komprimierten) Bytes der .bz2 ---
 class CountingRaw:
@@ -19,6 +24,7 @@ class CountingRaw:
     def seekable(self): return False
     def close(self): self._f.close()
 
+# Dump beim Lesen dekomprimieren und dabei den Byte-Fortschritt mitzaehlen
 raw    = CountingRaw(DUMP)
 stream = io.TextIOWrapper(bz2.BZ2File(raw), encoding="utf-8")   # dekomprimiert + zaehlt
 
@@ -26,6 +32,7 @@ t0   = time.time()
 n    = 0     # extrahierte Artikel
 seen = 0     # gescannte Seiten (inkl. uebersprungene)
 
+# Dump streamen, echte Artikel herausfiltern und als JSONL (docno, title, text) schreiben
 with open(OUT, "w", encoding="utf-8") as out:
     for page in mwxml.Dump.from_file(stream):     # streamt durch den Dump
         seen += 1
@@ -45,10 +52,11 @@ with open(OUT, "w", encoding="utf-8") as out:
             text = revision.text or ""
             break
         plain = mwparserfromhell.parse(text).strip_code()   # Wikitext -> Fliesstext
-        if len(plain) < 50:
+        if len(plain) < 50:                          # sehr kurze Stubs ueberspringen
             continue
         out.write(json.dumps({"docno": str(page.id), "title": page.title, "text": plain}) + "\n")
         n += 1
 
+# Streams schliessen und Endstatistik ausgeben
 stream.close(); raw.close()
 print(f"Fertig: {n:,} Artikel aus {seen:,} Seiten -> {OUT}  ({(time.time()-t0)/60:.0f} min)", flush=True)

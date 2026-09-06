@@ -1,15 +1,21 @@
-# inspect_esa_pairs.py -- zeigt echte Query-Paare je ESA-Cosinus-Band,
-# damit du ESA_TH datenbasiert festlegen kannst (laeuft lokal, NDA-sicher).
+# inspect_esa_pairs.py -- gibt echte Query-Paare je ESA-Cosinus-Band aus,
+# als Grundlage fuer eine datenbasierte Wahl von ESA_TH.
+# Eingabe: cascade_full_1234.tsv
+
 import csv, random
 random.seed(42)
+
+# Eingabepfad, Stichprobengroesse je Band und die Cosinus-Baender
 INP = "../../data/cascade_full_1234.tsv"
 N_PER_BAND = 15
 BANDS = [(0.005,0.02),(0.02,0.05),(0.05,0.10),(0.10,0.20),(0.20,0.50),(0.50,1.01)]
 csv.field_size_limit(2**31 - 1)
 
+# Je Band: gezogene Beispielpaare und Gesamtzahl gesehener Paare
 samples = {b: [] for b in BANDS}
 seen    = {b: 0  for b in BANDS}
 
+# Datei durchlaufen und aufeinanderfolgende Query-Paare ihrem ESA-Cosinus-Band zuordnen
 with open(INP, newline="", encoding="utf-8") as f:
     r = csv.reader(f, delimiter="\t"); h = next(r)
     i_q, i_ec = h.index("query"), h.index("esa_cos")
@@ -29,6 +35,7 @@ with open(INP, newline="", encoding="utf-8") as f:
                     break
         prev_q = row[i_q]
 
+# Je Band die Gesamtzahl und die Beispielpaare (nach Cosinus absteigend) ausgeben
 for b in BANDS:
     print(f"\n=== ESA-Cosinus {b[0]:.3f}-{b[1]:.2f}  (insgesamt {seen[b]:,} Paare) ===")
     for c, pq, q in sorted(samples[b], reverse=True):

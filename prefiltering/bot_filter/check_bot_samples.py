@@ -1,21 +1,26 @@
 # check_bot_samples.py <session_file>
 # Gegenprobe: zeigt K geflaggte (metronomartige) und K behaltene Sessions im Klartext,
-# mit Zeitabstaenden zwischen den Queries. Ausgabe bleibt LOKAL (echte Queries, NDA).
+# mit den Zeitabstaenden zwischen den Queries.
+# Eingabe: dis22_sessions.tsv (default) | Ausgabe: bot_check_samples.txt
+
 import csv, sys, random, statistics
 from collections import defaultdict
 from datetime import datetime, timezone
 csv.field_size_limit(2**31 - 1)
 
+# Eingabe, Stichprobengroesse je Gruppe, Bot-Schwellen und Ausgabedatei
 SRC = sys.argv[1] if len(sys.argv) > 1 else "../../data/dis22_sessions.tsv"
 K = 15
 MIN_TIMING_Q, MAX_MEAN_GAP, REG_STD = 3, 12, 2.0
 OUT = "../../data/bot_check_samples.txt"
 rnd = random.Random(42)
 
+# Hilfsfunktionen: NUL-Bytes entfernen, Zeitstempel lesbar formatieren
 def strip_nul(fo):
     for line in fo: yield line.replace("\x00", "")
 def fmt(ts): return datetime.fromtimestamp(int(ts), tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
+# Session-Datei einlesen: je Session die Zeitstempel und die uid sammeln
 ts_by = defaultdict(list); uid_by = {}
 with open(SRC, newline="", encoding="utf-8") as f:
     r = csv.reader(strip_nul(f), delimiter="\t"); h = next(r)
@@ -26,6 +31,7 @@ with open(SRC, newline="", encoding="utf-8") as f:
         if not sid: continue
         ts_by[sid].append(int(row[i_ts])); uid_by.setdefault(sid, row[i_uid])
 
+# Sessions nach Taktung in geflaggt/gut einteilen und je Gruppe K zufaellig auswaehlen
 flag = []; good = []
 for sid, tss in ts_by.items():
     c = len(tss)
@@ -37,6 +43,7 @@ rnd.shuffle(flag); rnd.shuffle(good)
 sel = flag[:K] + good[:K]
 info = {s[0]: (s[1], s[2]) for s in sel}; want = set(info)
 
+# Fuer die ausgewaehlten Sessions die einzelnen Queries (ts, query) einsammeln
 ev = defaultdict(list)
 with open(SRC, newline="", encoding="utf-8") as f:
     r = csv.reader(strip_nul(f), delimiter="\t"); h = next(r)
@@ -44,6 +51,7 @@ with open(SRC, newline="", encoding="utf-8") as f:
     for row in r:
         if row[i_sid] in want: ev[row[i_sid]].append((int(row[i_ts]), row[i_q]))
 
+# Beide Gruppen lesbar in die Ausgabedatei schreiben (je Query Zeit und Abstand zur vorigen)
 with open(OUT, "w", encoding="utf-8") as fo:
     def block(title, sids):
         fo.write(f"\n########## {title} ##########\n")
@@ -57,5 +65,5 @@ with open(OUT, "w", encoding="utf-8") as fo:
                 fo.write(f"    {fmt(ts)}  {gap:>7}  {q}\n"); prev = ts
     block("BOT-ARTIG (geflaggt) -- sollten metronomartig/automatisiert wirken", [s[0] for s in flag[:K]])
     block("GUT (behalten) -- sollten menschlich wirken", [s[0] for s in good[:K]])
+
 print(f"{len(flag[:K])} geflaggte + {len(good[:K])} gute Beispiel-Sessions -> {OUT}")
-print("(Datei enthaelt echte Queries -> bleibt lokal, NDA)")

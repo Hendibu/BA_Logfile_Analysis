@@ -1,19 +1,17 @@
 # check_getpdf_in_log.py
-# --------------------------------------------------------------------------
-# Testet, ob die merge_keys der get-pdf-Events ueberhaupt als search_id im
-# ROHEN Log vorkommen.
-#   - Kommen sie vor  -> echte Such-Nummern, die nur im GEFILTERTEN
-#                        Session-File nicht mehr enthalten sind.
-#   - Kommen sie NICHT -> get-pdf traegt einen anderen Hash (kein search_id),
-#                        eine Verknuepfung ueber search_id ist unmoeglich.
-# Nur Aggregate -> NDA-sicher. Bleibt lokal.
-# --------------------------------------------------------------------------
+# Testet, ob die merge_keys der get-pdf-Events ueberhaupt als search_id im ROHEN Log vorkommen.
+#   - kommen sie vor   -> echte Such-Nummern, die nur im gefilterten Session-File fehlen
+#   - kommen sie NICHT -> get-pdf traegt einen anderen Hash (kein search_id), keine Verknuepfung moeglich
+# Eingabe: log_files.tsv (Rohlog), interactions.tsv
+
 import csv, sys
 csv.field_size_limit(2**31 - 1)
 
+# Rohlog und Interaktionsdatei
 RAW   = "../../../data/log_files.tsv"
 INTER = "../../../data/interactions.tsv"
 
+# Hilfsfunktion: entfernt NUL-Bytes, damit der CSV-Reader nicht abbricht
 def strip_nul(fo):
     for line in fo:
         yield line.replace("\x00", "")
@@ -32,7 +30,7 @@ with open(INTER, newline="", encoding="utf-8", errors="replace") as f:
                 keys.add(mk)
 print(f"distinct get-pdf merge_keys (echt): {len(keys):,}")
 
-# 2) Roh-Log streamen und schauen, welche davon als search_id vorkommen
+# 2) Roh-Log streamen und schauen, welche dieser Keys als search_id vorkommen
 hit = set()
 n_query_rows = 0
 with open(RAW, newline="", encoding="utf-8", errors="replace") as f:
@@ -50,6 +48,7 @@ with open(RAW, newline="", encoding="utf-8", errors="replace") as f:
         if sid in keys:
             hit.add(sid)
 
+# Trefferquote berechnen und daraus die Schlussfolgerung ableiten
 pct = 100 * len(hit) / len(keys) if keys else 0
 print(f"Zeilen mit search_id im Log : {n_query_rows:,}")
 print(f"get-pdf merge_keys, die als search_id im Log vorkommen: {len(hit):,} von {len(keys):,} ({pct:.1f}%)")

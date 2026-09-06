@@ -1,5 +1,11 @@
+# clean_pipe.py -- streaming-sichere Bereinigungspipeline auf dem Parquet-Rohlog:
+# entfernt Duplikate, boolesche/feldbasierte/DOI/Titel-/Hochfrequenz-Queries, begrenzt
+# haeufige Queries, filtert auf echte oeffentliche uids und wandelt serp in eine ID-Liste.
+# Eingabe: log_files.parquet | Ausgabe: data_filtered.ndjson
+
 import polars as pl
 
+# Ein-/Ausgabe, Frequenz-Schwellen und die Feldnamen fuer feldbasierte Bot-Queries
 SRC = "../data/log_files.parquet"
 OUT = "../data/data_filtered.ndjson"
 
@@ -13,6 +19,7 @@ SPECIAL_FIELDS = [
 ]
 field_pattern = r"(^|\s|[^a-zA-Z0-9])(" + "|".join(SPECIAL_FIELDS) + r"):"
 
+# Parquet-Rohlog lazy einlesen
 lf = pl.scan_parquet(SRC)
 
 # --- streaming-sicher ---
@@ -32,17 +39,18 @@ lf = lf.join(qtot, on="query", how="left").filter(pl.col("_qtotal") < FREQ_DROP)
 lf = lf.with_columns(pl.int_range(pl.len()).over("query").alias("_rn"))  # limit(50)
 lf = lf.filter(pl.col("_rn") < FREQ_CAP).drop("_rn")
 
-# --- wieder streaming-sicher ---
+# --- wieder streaming-sicher: uid auf echte, oeffentliche Nutzer einschraenken ---
 lf = lf.filter(~pl.col("trackId").cast(pl.Utf8).str.starts_with("undefined"))
 lf = lf.filter(pl.col("uid").is_not_null())
 lf = lf.filter(~pl.col("uid").is_in(["null","NaN"]))
 lf = lf.filter(pl.col("uid").cast(pl.Utf8).str.starts_with("public"))
 
-# serp -> Liste von IDs + finale Spalten + Pflichtfelder
+# serp in eine Liste von IDs umwandeln, finale Spalten waehlen und Pflichtfelder sicherstellen
 lf = lf.with_columns(
     pl.col("serp").str.extract_all(r"\d+").list.eval(pl.element().cast(pl.Int64)).alias("serp"))
 lf = lf.select(["date","search_id","serp","query","uid"]).filter(
     pl.col("date").is_not_null() & pl.col("search_id").is_not_null() & pl.col("query").is_not_null())
 
+# Ergebnis streamend als NDJSON wegschreiben
 lf.sink_ndjson(OUT)
 print("Fertig ->", OUT)
