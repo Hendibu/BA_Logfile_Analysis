@@ -30,7 +30,6 @@ annotation_*.txt
 *.bz2
 *.xml
 *.jsonl
-*_index/
 toy_index/
 wiki_index/
 wiki_index_full/
@@ -51,4 +50,5 @@ venv/
 
 # Editor/OS
 .vscode/
+.claude/
 .DS_Store
