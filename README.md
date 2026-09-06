@@ -1,4 +1,4 @@
-# Bachelorarbeit: Analyse von Nutzerverhalten und Query-Reformulierungsstrategien in CORE-Logfiles
+# Bachelorarbeit: Rekonstruktion von Suchsessions und Analysen von Query-Reformulierungsstrategien in CORE-Logfiles
 
 ## Informationen
 
