@@ -6,7 +6,7 @@
 * Zweitgutachter: M.Sc. Andreas Kruff
 * Studierender: Hendrik Buschke
 
-Schlagwörter: Sessionrekonstruktion, Query-Reformulierung, Logfile-Analyse, CORE, LongEval, Kaskade, DIS22, ESA, Huang & Efthimiadis
+Schlagwörter: Sessionrekonstruktion, Query-Reformulierung, Logfile-Analyse
 
 ## Überblick
 
@@ -21,7 +21,7 @@ Die Analyse ist entlang der beiden Forschungsfragen aufgebaut (F1 = Sessionrekon
 
 Die zugrunde liegenden Suchlogs sind aus Datenschutzgründen (NDA) **nicht im Repository enthalten**. Die Skripte erwarten die entsprechenden Dateien im Ordner `data/`; die Pfade lassen sich am Anfang jedes Skripts anpassen.
 
-* Suchlogs (CORE): aus der LongEval-2025-CORE-Kollektion (Cancellieri et al., 2025). Werden hier nicht weitergegeben.
+* Suchlogs (CORE): Werden hier nicht weitergegeben.
 * Dokumentkorpus (Titel / Known-Item): die öffentliche LongEval-CORE-Dokumentkollektion.
 * Semantischer Index (Kaskaden-Stufe s3): aufgebaut aus dem öffentlichen Simple-English-Wikipedia-Dump (`simplewiki-latest-pages-articles.xml.bz2`).
 
